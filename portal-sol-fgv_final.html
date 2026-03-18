@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Serviços FGV – SOL Soluções Educacionais</title>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --fgv-blue: #003876;
+    --fgv-blue-mid: #004fa3;
+    --fgv-blue-light: #0063cc;
+    --fgv-cyan: #00aeef;
+    --fgv-orange: #e8671b;
+    --fgv-gray: #f5f6f7;
+    --fgv-border: #dfe1e6;
+    --fgv-text: #172b4d;
+    --fgv-text-muted: #6b778c;
+    --fgv-white: #ffffff;
+    --sidebar-width: 230px;
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--fgv-text);
+    background: var(--fgv-gray);
+    font-size: 14px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--fgv-blue);
+    height: 44px;
+    display: flex; align-items: center; padding: 0 20px;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .topbar-breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    color: rgba(255,255,255,0.75); font-size: 13px;
+  }
+  .topbar-breadcrumb a { color: rgba(255,255,255,0.75); text-decoration: none; }
+  .topbar-breadcrumb a:hover { color: #fff; }
+  .topbar-breadcrumb span { color: rgba(255,255,255,0.5); }
+  .topbar-logo {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-actions {
+    display: flex; align-items: center; gap: 14px;
+    color: rgba(255,255,255,0.8);
+  }
+  .topbar-actions svg { cursor: pointer; width: 18px; height: 18px; }
+  .topbar-actions svg:hover { color: #fff; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--fgv-orange);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 40px 20px 44px;
+    text-align: center; color: white; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1600&q=80');
+    background-size: cover; background-position: center 40%;
+    filter: brightness(0.28) saturate(0.5); z-index: 0;
+  }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(0,15,50,0.78) 0%, rgba(0,40,100,0.62) 50%, rgba(0,15,50,0.78) 100%);
+    z-index: 1;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center; gap: 20px;
+  }
+  .hero-content h1 {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .search-bar {
+    max-width: 520px; width: 100%; margin: 0 auto; position: relative;
+  }
+  .search-bar input {
+    width: 100%; padding: 10px 16px 10px 40px;
+    border: none; border-radius: 4px;
+    font-size: 14px; font-family: inherit; outline: none;
+    color: var(--fgv-text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .search-bar svg {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--fgv-text-muted);
+  }
+
+  /* ── BODY LAYOUT ── */
+  .page-body {
+    display: flex; flex: 1;
+    max-width: 1100px; margin: 0 auto; width: 100%;
+    padding: 28px 20px; gap: 24px; align-items: flex-start;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar { width: var(--sidebar-width); flex-shrink: 0; }
+  .sidebar-label {
+    font-size: 11px; font-weight: 700; color: var(--fgv-text-muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px; padding-left: 12px;
+  }
+  .sidebar-item {
+    display: block; padding: 9px 12px; border-radius: 4px;
+    cursor: pointer; font-size: 13.5px; color: var(--fgv-text);
+    transition: background 0.15s; user-select: none;
+    border: none; background: none; width: 100%;
+    text-align: left; font-family: inherit;
+  }
+  .sidebar-item:hover { background: #e4e6ea; }
+  .sidebar-item.active { background: var(--fgv-blue); color: white; font-weight: 600; }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; }
+  .content-title { font-size: 15px; color: var(--fgv-text); margin-bottom: 20px; }
+
+  .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  .service-card {
+    display: flex; flex-direction: row; align-items: flex-start;
+    gap: 14px; padding: 20px 18px; background: white;
+    border-radius: 4px; border: none; cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    text-decoration: none; color: inherit;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .service-card:hover { background: #f0f4ff; box-shadow: 0 2px 8px rgba(0,56,118,0.15); }
+
+  /* Badge "formulário completo" no primeiro card */
+  .service-card.card-featured { border-top: 3px solid var(--fgv-cyan); }
+
+  .card-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fgv-blue); opacity: 0.75;
+  }
+  .card-icon svg { width: 28px; height: 28px; stroke-width: 1.5; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--fgv-text); margin-bottom: 4px; line-height: 1.3; }
+  .card-desc { font-size: 12.5px; color: var(--fgv-text-muted); line-height: 1.45; }
+
+  .category-panel { display: none; }
+  .category-panel.active { display: block; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 4px;
+    width: 600px; max-width: 95vw; max-height: 90vh;
+    overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  }
+  .modal-header {
+    background: var(--fgv-blue); color: white;
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h2 { font-size: 16px; font-weight: 600; }
+  .modal-close { background: none; border: none; color: white; cursor: pointer; font-size: 20px; line-height: 1; }
+
+  .modal-body { padding: 24px 20px; }
+
+  .form-row { margin-bottom: 18px; }
+  .form-label {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 12px; font-weight: 700; color: var(--fgv-text); margin-bottom: 5px;
+  }
+  .form-label .required { color: #de350b; margin-left: 2px; }
+
+  .form-control {
+    width: 100%; padding: 8px 10px;
+    border: 2px solid var(--fgv-border); border-radius: 3px;
+    font-size: 14px; font-family: inherit; color: var(--fgv-text);
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-control:focus { border-color: var(--fgv-blue-light); }
+  select.form-control { background-color: white; cursor: pointer; }
+  textarea.form-control { resize: vertical; min-height: 90px; }
+
+  .form-row-2col { display: flex; gap: 14px; margin-bottom: 18px; }
+  .form-row-2col .form-row { flex: 1; margin-bottom: 0; }
+
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .radio-option { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; color: var(--fgv-text); cursor: pointer; line-height: 1.4; }
+  .radio-option input[type="radio"] { margin-top: 2px; flex-shrink: 0; accent-color: var(--fgv-blue); width: 15px; height: 15px; }
+
+  .form-hint {
+    display: flex; gap: 6px; align-items: flex-start;
+    background: #e8f0fe; border: 1px solid #c0d4f5;
+    border-radius: 3px; padding: 8px 10px;
+    font-size: 12px; color: #1a3a6e; line-height: 1.45; margin-bottom: 7px;
+  }
+  .form-hint svg { color: #004fa3; flex-shrink: 0; margin-top: 1px; }
+  .form-hint-warn { background: #fff8e1; border-color: #ffe082; color: #5d4037; }
+  .form-hint-warn svg { color: #f57c00; }
+
+  .conditional-block { display: none; }
+  .conditional-block.visible { display: block; }
+
+  /* Tooltip ⓘ */
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+  .tooltip-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 4px; cursor: help; color: #0052cc; }
+  .tooltip-icon svg { width: 16px; height: 16px; }
+  .tooltip-box {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+    background: #172b4d; color: white; font-size: 12px; line-height: 1.5;
+    padding: 8px 12px; border-radius: 4px; width: 240px; z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); pointer-events: none; font-weight: 400;
+  }
+  .tooltip-wrap:hover .tooltip-box { display: block; }
+
+  .modal-footer {
+    padding: 14px 20px; border-top: 1px solid var(--fgv-border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+  .btn { padding: 8px 20px; border-radius: 3px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: background 0.15s; }
+  .btn-primary { background: var(--fgv-blue); color: white; }
+  .btn-primary:hover { background: var(--fgv-blue-mid); }
+  .btn-secondary { background: var(--fgv-gray); color: var(--fgv-text); border: 1px solid var(--fgv-border); }
+  .btn-secondary:hover { background: #e4e6ea; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--fgv-blue); color: rgba(255,255,255,0.75);
+    text-align: center; padding: 20px; font-size: 13px; margin-top: auto;
+  }
+  footer a { color: white; font-weight: 600; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .page-body { flex-direction: column; padding: 16px; }
+    .sidebar { width: 100%; }
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+    .topbar-breadcrumb { display: none; }
+    .form-row-2col { flex-direction: column; }
+    .hero-logo-text { font-size: 30px; }
+  }
+  @media (max-width: 480px) { .cards-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="#">Portal de Serviços FGV</a>
+    <span>›</span>
+    <a href="#">SOL – Soluções Educacionais</a>
+    <span>›</span>
+    <span>Solicitação de Serviços</span>
+  </nav>
+  <div class="topbar-logo">
+    <!-- Asa FGV + texto -->
+    <svg width="110" height="24" viewBox="0 0 110 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Chevron/asa estilo FGV -->
+      <polygon points="0,12 8,0 14,0 6,12 14,24 8,24" fill="white"/>
+      <polygon points="7,12 15,0 21,0 13,12 21,24 15,24" fill="#00aeef"/>
+      <!-- FGV -->
+      <text x="26" y="18" font-family="Arial" font-weight="900" font-size="18" fill="white" letter-spacing="1">FGV</text>
+    </svg>
+  </div>
+  <div class="topbar-actions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <div class="avatar">SO</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <h1>Bem-vindo(a) ao Portal de Serviços – SOL Soluções Educacionais</h1>
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Como podemos ajudar?" id="search-input">
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="page-body">
+  <aside class="sidebar">
+    <div class="sidebar-label">Categorias</div>
+    <button class="sidebar-item active" onclick="showCategory('conteudo-lms',this)">Produção de Conteúdo LMS</button>
+    <button class="sidebar-item" onclick="showCategory('producao-web',this)">Produções Web</button>
+    <button class="sidebar-item" onclick="showCategory('producao-video',this)">Produções em Vídeo</button>
+    <button class="sidebar-item" onclick="showCategory('revisao',this)">Tradução, Revisão e Diagramação</button>
+    <button class="sidebar-item" onclick="showCategory('modelagem',this)">Modelagem de Soluções Educacionais</button>
+  </aside>
+
+  <section class="content">
+    <p class="content-title">Navegue pelo menu ao lado para selecionar o serviço desejado</p>
+
+    <!-- ══ PRODUÇÃO DE CONTEÚDO LMS ══ -->
+    <div id="cat-conteudo-lms" class="category-panel active">
+      <div class="cards-grid">
+
+        <!-- FORMULÁRIO COMPLETO — primeiro card, destaque -->
+        <a class="service-card card-featured" href="#" onclick="openModal('modal-lms');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="12" y1="7" x2="16" y2="7"/><line x1="9" y1="7" x2="9.01" y2="7"/><line x1="12" y1="11" x2="16" y2="11"/><line x1="9" y1="11" x2="9.01" y2="11"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Pedido de Conteúdo LMS</div>
+            <div class="card-desc">Solicite a produção ou atualização de disciplina no ambiente de aprendizagem.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Atividade Individual Customizada','Solicite a criação de atividade avaliativa customizada para disciplina específica. Baixe a matriz padrão em fgvbr.sharepoint.com → Modelo-FGV2.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/><path d="M16 14l1.5 1.5L20 12"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Atividade Individual Customizada</div>
+            <div class="card-desc">Criação de atividades avaliativas customizadas para disciplinas específicas.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Criar Novo Modelo de Disciplina','Solicite a criação de um novo modelo de disciplina no LMS. Informe o nome do curso, área solicitante e especificações do modelo.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Criar Novo Modelo de Disciplina</div>
+            <div class="card-desc">Solicitação de criação de modelo do zero no ambiente LMS.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Criar Turma a partir de Modelo','Solicite a criação de uma nova turma com base em modelo de disciplina já existente no LMS.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Criar Turma a partir de Modelo</div>
+            <div class="card-desc">Geração de nova turma com base em modelo de disciplina existente.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Replicar Modelo Existente','Solicite a replicação de um modelo de disciplina já configurado para um novo curso ou período.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Replicar Modelo Existente</div>
+            <div class="card-desc">Cópia de modelo já configurado para novo curso ou período.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Ajuste de Configuração de Ferramentas','Solicite ajustes nas configurações de ferramentas do modelo: iClass, fóruns, atividades e outros recursos.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Ajuste de Configuração de Ferramentas</div>
+            <div class="card-desc">Alterações em ferramentas do modelo: iClass, fóruns e atividades.</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ══ PRODUÇÕES WEB ══ -->
+    <div id="cat-producao-web" class="category-panel">
+      <div class="cards-grid">
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Cursos On-line','Solicite a produção de um curso on-line completo, com estrutura de módulos, conteúdo interativo e atividades avaliativas.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Cursos On-line</div>
+            <div class="card-desc">Produção de curso on-line completo com módulos e conteúdo interativo.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Jogos Didáticos','Solicite o desenvolvimento de um jogo didático para apoiar o processo de ensino-aprendizagem.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="11" r="1"/><circle cx="17" cy="13" r="1"/><path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Jogos Didáticos</div>
+            <div class="card-desc">Desenvolvimento de jogos educativos para engajamento e aprendizagem.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Manuais e Tutoriais Eletrônicos','Solicite a criação de manuais ou tutoriais eletrônicos interativos para suporte ao usuário ou aluno.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Manuais e Tutoriais Eletrônicos</div>
+            <div class="card-desc">Criação de manuais e tutoriais interativos para suporte ao usuário ou aluno.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Recursos Interativos','Solicite o desenvolvimento de recursos interativos para enriquecer o conteúdo de uma disciplina ou curso.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Recursos Interativos</div>
+            <div class="card-desc">Desenvolvimento de objetos interativos para enriquecer disciplinas e cursos.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Soluções Customizadas (Web)','Solicite o desenvolvimento de uma solução web customizada para suas necessidades educacionais específicas.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Soluções Customizadas</div>
+            <div class="card-desc">Desenvolvimento de soluções web sob medida para necessidades educacionais.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Hotsites','Solicite a criação de um hotsite para divulgação de curso, evento ou projeto educacional.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Hotsites</div>
+            <div class="card-desc">Criação de hotsite para divulgação de curso, evento ou projeto educacional.</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ══ PRODUÇÕES EM VÍDEO ══ -->
+    <div id="cat-producao-video" class="category-panel">
+      <div class="cards-grid">
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Gravação e Edição de Vídeo','Solicite gravação e edição de vídeoaulas, apresentações ou outros conteúdos audiovisuais. Informe data desejada, duração e roteiro.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Gravação e Edição de Vídeo</div>
+            <div class="card-desc">Produção completa de vídeoaulas e conteúdos audiovisuais.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Transmissão via Webcasting','Solicite a transmissão ao vivo de aulas, palestras ou eventos por webcasting.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 6l11 6L23 6"/><path d="M1 6v12l11 6 11-6V6"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Transmissões via Webcasting</div>
+            <div class="card-desc">Transmissão ao vivo de aulas, palestras e eventos educacionais.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Videografismos','Solicite a criação de vinhetas, animações e elementos gráficos para vídeos educacionais.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Videografismos</div>
+            <div class="card-desc">Vinhetas, animações e elementos gráficos para vídeos educacionais.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Whiteboard','Solicite a produção de vídeos no formato whiteboard (quadro branco animado) para explicação de conceitos.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="16" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/><line x1="8" y1="20" x2="8" y2="22"/><line x1="16" y1="20" x2="16" y2="22"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Whiteboard</div>
+            <div class="card-desc">Vídeos animados no formato quadro branco para explicação de conceitos.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Podcast','Solicite a produção de episódios de podcast educacional: roteiro, gravação e edição de áudio.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Podcast</div>
+            <div class="card-desc">Produção de episódios de podcast educacional: roteiro, gravação e edição.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Roteirização','Solicite a elaboração de roteiro para vídeoaula, curso on-line, podcast ou outro produto audiovisual.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="21" y1="6" x2="3" y2="6"/><line x1="15" y1="12" x2="3" y2="12"/><line x1="17" y1="18" x2="3" y2="18"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Roteirização</div>
+            <div class="card-desc">Elaboração de roteiro para vídeoaula, podcast ou produto audiovisual.</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ══ TRADUÇÃO, REVISÃO E DIAGRAMAÇÃO ══ -->
+    <div id="cat-revisao" class="category-panel">
+      <div class="cards-grid">
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Revisão e Edição de Apostilas e Textos','Solicite revisão textual, gramatical e ortográfica de apostilas, artigos e textos didáticos. Anexe o material a ser revisado.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Revisão de Apostilas e Textos</div>
+            <div class="card-desc">Revisão textual, gramatical e ortográfica de materiais didáticos.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Diagramação de Material','Solicite a diagramação e formatação de apostilas, guias, manuais ou apresentações seguindo os padrões da FGV.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Diagramação de Material</div>
+            <div class="card-desc">Formatação e layout de apostilas, guias e manuais nos padrões FGV.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Revisão e Edição de Apresentações (Slides)','Solicite revisão de conteúdo e edição visual de apresentações de slides para uso em aulas ou eventos.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Revisão de Apresentações (Slides)</div>
+            <div class="card-desc">Revisão e edição visual de slides para aulas e eventos.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Tradução de Material','Solicite a tradução de materiais didáticos, apostilas ou conteúdos on-line para outros idiomas.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Tradução de Material</div>
+            <div class="card-desc">Tradução de materiais didáticos e conteúdos on-line para outros idiomas.</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- ══ MODELAGEM DE SOLUÇÕES EDUCACIONAIS ══ -->
+    <div id="cat-modelagem" class="category-panel">
+      <div class="cards-grid">
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Design de Soluções Customizadas','Solicite o design pedagógico de uma solução educacional customizada para necessidades específicas de uma área ou escola.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Design de Soluções Customizadas</div>
+            <div class="card-desc">Modelagem pedagógica de soluções educacionais sob medida.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Design de Trilhas de Aprendizagem','Solicite o design de uma trilha de aprendizagem estruturada, com sequência de conteúdos, competências e avaliações.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Design de Trilhas de Aprendizagem</div>
+            <div class="card-desc">Estruturação de trilhas com sequência de conteúdos e competências.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Design de Processos e Instrumentos de Avaliação','Solicite o design de processos e instrumentos de avaliação de aprendizagem alinhados aos objetivos do curso.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Design de Processos de Avaliação</div>
+            <div class="card-desc">Criação de processos e instrumentos de avaliação de aprendizagem.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Análise de Viabilidade / Orçamento','Solicite uma análise de viabilidade ou orçamento estimado antes de formalizar uma nova demanda.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Análise de Viabilidade / Orçamento</div>
+            <div class="card-desc">Avaliação prévia de viabilidade e estimativa de custo para novas demandas.</div>
+          </div>
+        </a>
+
+        <a class="service-card" href="#" onclick="openModal('modal-gen','Demanda Não Padronizada','Use este formulário para demandas que não se enquadram nas categorias disponíveis. Descreva com o máximo de detalhes possível.');return false;">
+          <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="card-text">
+            <div class="card-title">Demanda Não Padronizada</div>
+            <div class="card-desc">Demandas que não se enquadram nas categorias disponíveis.</div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ══════════════════════════════════════════
+     MODAL: PEDIDO DE CONTEÚDO LMS (formulário completo)
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-lms" onclick="closeModalOutside(event,'modal-lms')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Pedido de Conteúdo LMS</h2>
+      <button class="modal-close" onclick="closeModal('modal-lms')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Preencha os dados da disciplina com atenção. Campos com <strong style="color:#de350b">*</strong> são obrigatórios.</span>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Tipo de conteúdo LMS <span class="required">*</span></label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Curta Duração"> Curta Duração</label>
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Média Duração"> Média Duração</label>
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Longa Duração (MBA ou Pós)"> Longa Duração (MBA ou Pós)</label>
+        </div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Nome do curso <span class="required">*</span></label>
+          <input type="text" class="form-control" id="lms-curso" placeholder="Ex.: MBA em Gestão Empresarial">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Cliente / área solicitante <span class="required">*</span>
+            <span class="tooltip-wrap"><span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="tooltip-box">Informe a unidade, escola ou área solicitante. Ex.: FGV EAESP, IDE, Corporativo IC.</span></span>
+          </label>
+          <input type="text" class="form-control" id="lms-cliente" placeholder="Ex.: IDE, FGV EAESP">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Nome da disciplina <span class="required">*</span></label>
+        <input type="text" class="form-control" id="lms-disciplina" placeholder="Ex.: Fundamentos de Marketing Digital">
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Período inicial <span class="required">*</span></label>
+          <input type="date" class="form-control" id="lms-inicio">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Período final <span class="required">*</span></label>
+          <input type="date" class="form-control" id="lms-fim">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Haverá customização de disciplina? <span class="required">*</span>
+          <span class="tooltip-wrap"><span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="tooltip-box">Adaptações no conteúdo padrão — inclusão de materiais, ajustes de ementa ou configurações diferenciadas.</span></span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-custom" value="Sim" onchange="toggleBlock('lms-custom-desc',true)"> Sim</label>
+          <label class="radio-option"><input type="radio" name="lms-custom" value="Não" onchange="toggleBlock('lms-custom-desc',false)"> Não</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-custom-desc">
+        <div class="form-row">
+          <label class="form-label">Descreva a customização <span class="required">*</span></label>
+          <textarea class="form-control" id="lms-custom-texto" placeholder="Descreva as customizações necessárias..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Haverá atividade individual customizada? <span class="required">*</span>
+          <span class="tooltip-wrap"><span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="tooltip-box">Atividade avaliativa criada especificamente para esta disciplina. Baixe a matriz em: fgvbr.sharepoint.com → Modelo-FGV2.</span></span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (com anexo)" onchange="handleAIChange(this.value)"> Sim (com anexo)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (enviará o anexo posteriormente)" onchange="handleAIChange(this.value)"> Sim (enviará o anexo posteriormente)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (customizada pelo professor)" onchange="handleAIChange(this.value)"> Sim (customizada pelo professor)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Não" onchange="handleAIChange(this.value)"> Não</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-ai-upload">
+        <div class="form-row">
+          <label class="form-label">Matriz da atividade individual <span class="required">*</span></label>
+          <div class="form-hint form-hint-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Baixe a matriz padrão antes de preencher: <strong>fgvbr.sharepoint.com → Modelo-FGV2</strong>. Aceitos: Word, Excel, PPT, PDF, imagem (máx. 100 MB).</span>
+          </div>
+          <input type="file" class="form-control" id="lms-matriz" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.jpg,.jpeg,.png">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Fórmula de cálculo da Média Online (MO) <span class="required">*</span>
+          <span class="tooltip-wrap"><span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="tooltip-box">AI = Atividade Individual. PI = Prova Individual. Selecione a fórmula aplicada a esta disciplina.</span></span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=50% + PI=50%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=50% + PI=50%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=70% + PI=30%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=70% + PI=30%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=40% + PI=60%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=40% + PI=60%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="Outros" onchange="toggleBlock('lms-mo-outro',true)"> Outros</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-mo-outro">
+        <div class="form-row">
+          <label class="form-label">Informe a fórmula da MO <span class="required">*</span></label>
+          <input type="text" class="form-control" id="lms-mo-texto" placeholder="Ex.: AI=60% + PI=40%">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">ROL <span class="required">*</span>
+          <span class="tooltip-wrap"><span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span><span class="tooltip-box">ROL (Resultado Online): registro de desempenho do aluno na disciplina.</span></span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-rol" value="Haverá ROL"> Haverá ROL</label>
+          <label class="radio-option"><input type="radio" name="lms-rol" value="Não haverá ROL"> Não haverá ROL</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="lms-complementar" placeholder="Informações adicionais relevantes para este pedido..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-lms')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitLMS()">Enviar Solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL GENÉRICO
+══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-gen" onclick="closeModalOutside(event,'modal-gen')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="gen-titulo">Solicitação de Serviço</h2>
+      <button class="modal-close" onclick="closeModal('modal-gen')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-hint" id="gen-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="gen-hint-texto"></span>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Nome do curso / projeto <span class="required">*</span></label>
+        <input type="text" class="form-control" id="gen-nome" placeholder="Ex.: MBA em Gestão Empresarial">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Área / cliente solicitante <span class="required">*</span></label>
+        <input type="text" class="form-control" id="gen-area" placeholder="Ex.: IDE, FGV EAESP, Corporativo IC">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descrição detalhada da solicitação <span class="required">*</span></label>
+        <textarea class="form-control" id="gen-descricao" placeholder="Descreva com o máximo de detalhes possível..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Anexo</label>
+        <input type="file" class="form-control" id="gen-anexo" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.png">
+        <div style="font-size:11.5px;color:var(--fgv-text-muted);margin-top:4px">PDF, Word, Excel, PPT, imagem. Máx. 100 MB.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="gen-complementar" placeholder="Informações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-gen')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitGenerico()">Enviar Solicitação</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Copyright &copy; 2025 FGV – Todos os Direitos Reservados.<br>
+  Contato: <a href="mailto:demandas.sol@fgv.br">demandas.sol@fgv.br</a> &nbsp;|&nbsp;
+  <a href="#">Política de Privacidade</a></p>
+</footer>
+
+<script>
+function showCategory(cat, btn) {
+  document.querySelectorAll('.category-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('cat-' + cat).classList.add('active');
+  btn.classList.add('active');
+}
+
+function openModal(id, titulo, hintTexto) {
+  if (id === 'modal-gen') {
+    document.getElementById('gen-titulo').textContent = titulo || 'Solicitação de Serviço';
+    const hint = document.getElementById('gen-hint');
+    const hintTxt = document.getElementById('gen-hint-texto');
+    if (hintTexto) { hintTxt.textContent = hintTexto; hint.style.display = 'flex'; }
+    else { hint.style.display = 'none'; }
+    ['gen-nome','gen-area','gen-descricao','gen-complementar'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  }
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+function toggleBlock(id, show) { document.getElementById(id).classList.toggle('visible', show); }
+function handleAIChange(val) { toggleBlock('lms-ai-upload', val === 'Sim (com anexo)'); }
+
+function submitLMS() {
+  const tipo       = document.querySelector('input[name="lms-tipo"]:checked');
+  const curso      = document.getElementById('lms-curso').value.trim();
+  const cliente    = document.getElementById('lms-cliente').value.trim();
+  const disciplina = document.getElementById('lms-disciplina').value.trim();
+  const inicio     = document.getElementById('lms-inicio').value;
+  const fim        = document.getElementById('lms-fim').value;
+  const custom     = document.querySelector('input[name="lms-custom"]:checked');
+  const customTxt  = document.getElementById('lms-custom-texto').value.trim();
+  const ai         = document.querySelector('input[name="lms-ai"]:checked');
+  const mo         = document.querySelector('input[name="lms-mo"]:checked');
+  const moTxt      = document.getElementById('lms-mo-texto').value.trim();
+  const rol        = document.querySelector('input[name="lms-rol"]:checked');
+
+  if (!tipo)       { alert('Selecione o tipo de conteúdo LMS.'); return; }
+  if (!curso)      { alert('Informe o nome do curso.'); document.getElementById('lms-curso').focus(); return; }
+  if (!cliente)    { alert('Informe o cliente / área solicitante.'); document.getElementById('lms-cliente').focus(); return; }
+  if (!disciplina) { alert('Informe o nome da disciplina.'); document.getElementById('lms-disciplina').focus(); return; }
+  if (!inicio)     { alert('Informe o período inicial.'); return; }
+  if (!fim)        { alert('Informe o período final.'); return; }
+  if (!custom)     { alert('Informe se haverá customização de disciplina.'); return; }
+  if (custom.value === 'Sim' && !customTxt) { alert('Descreva a customização.'); document.getElementById('lms-custom-texto').focus(); return; }
+  if (!ai)         { alert('Informe se haverá atividade individual customizada.'); return; }
+  if (!mo)         { alert('Selecione a fórmula da Média Online.'); return; }
+  if (mo.value === 'Outros' && !moTxt) { alert('Informe a fórmula da MO.'); document.getElementById('lms-mo-texto').focus(); return; }
+  if (!rol)        { alert('Informe se haverá ROL.'); return; }
+
+  closeModal('modal-lms');
+  setTimeout(() => alert('✅ Solicitação enviada com sucesso!\n\nVocê receberá um e-mail de confirmação com o número do chamado em breve.'), 150);
+}
+
+function submitGenerico() {
+  const nome = document.getElementById('gen-nome').value.trim();
+  const desc = document.getElementById('gen-descricao').value.trim();
+  if (!nome) { alert('Preencha o campo de nome obrigatório.'); document.getElementById('gen-nome').focus(); return; }
+  if (!desc) { alert('Preencha o campo de descrição.'); document.getElementById('gen-descricao').focus(); return; }
+  closeModal('modal-gen');
+  setTimeout(() => alert('✅ Solicitação enviada com sucesso!\n\nVocê receberá um e-mail de confirmação com o número do chamado em breve.'), 150);
+}
+
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.service-card').forEach(card => {
+    card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
