@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Serviços FGV – SOL Soluções Educacionais</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --fgv-blue: #003876;
+  --fgv-blue-mid: #004fa3;
+  --fgv-blue-light: #0052cc;
+  --fgv-orange: #e8671b;
+  --fgv-text: #172b4d;
+  --fgv-text-muted: #6b778c;
+  --fgv-border: #dfe1e6;
+  --fgv-gray: #f5f6f7;
+  --fgv-white: #ffffff;
+}
+
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--fgv-text);
+  background: var(--fgv-white);
+  font-size: 14px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--fgv-blue);
+  height: 50px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.8); font-size: 13px;
+}
+.topbar-breadcrumb a { color: rgba(255,255,255,0.8); text-decoration: none; }
+.topbar-breadcrumb a:hover { color: #fff; text-decoration: underline; }
+.topbar-breadcrumb .sep { color: rgba(255,255,255,0.4); }
+.topbar-center {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 8px;
+}
+.topbar-logo-text { color: white; font-weight: 900; font-size: 22px; letter-spacing: 0.08em; }
+.topbar-actions { display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.85); }
+.topbar-actions svg { cursor: pointer; width: 18px; height: 18px; }
+.topbar-actions svg:hover { color: #fff; }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--fgv-orange);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; font-size: 12px; cursor: pointer;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative; height: 190px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 18px; overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1600&q=80');
+  background-size: cover; background-position: center 30%;
+  filter: brightness(0.3) saturate(0.5); z-index: 0;
+}
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,25,60,0.6) 0%, rgba(0,15,40,0.72) 100%);
+  z-index: 1;
+}
+.hero h1 {
+  position: relative; z-index: 2;
+  color: white; font-size: 22px; font-weight: 700;
+  letter-spacing: 0.01em; text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.hero-search {
+  position: relative; z-index: 2;
+  width: 480px; max-width: 90vw;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 3px;
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+}
+.hero-search svg { color: #6b778c; flex-shrink: 0; }
+.hero-search input {
+  background: none; border: none; outline: none;
+  color: #172b4d; font-size: 14px; font-family: inherit;
+  width: 100%; padding: 11px 0;
+}
+.hero-search input::placeholder { color: #6b778c; }
+
+/* ── MAIN ── */
+.page-body {
+  display: flex; flex: 1;
+  max-width: 1060px; margin: 0 auto;
+  width: 100%; padding: 40px 28px; gap: 0;
+  align-items: flex-start;
+}
+
+/* ── SIDEBAR ── */
+.sidebar { width: 210px; flex-shrink: 0; }
+.sidebar-label {
+  font-size: 15px; font-weight: 700;
+  color: var(--fgv-text); margin-bottom: 14px;
+}
+.sidebar-item {
+  display: block; padding: 8px 12px;
+  border-radius: 3px; cursor: pointer;
+  font-size: 14px; color: var(--fgv-text);
+  transition: background 0.12s;
+  border: none; background: none;
+  width: 100%; text-align: left;
+  font-family: inherit; margin-bottom: 2px;
+  user-select: none;
+}
+.sidebar-item:hover { background: #ebecf0; }
+.sidebar-item.active {
+  background: var(--fgv-blue); color: white; font-weight: 600;
+}
+
+/* ── CONTENT ── */
+.content { flex: 1; padding-left: 32px; }
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+
+.service-card {
+  display: flex; flex-direction: row;
+  align-items: flex-start; gap: 14px;
+  padding: 18px 14px;
+  background: white; border: none; cursor: pointer;
+  text-decoration: none; color: inherit;
+  border-radius: 3px; transition: background 0.12s;
+}
+.service-card:hover { background: #f4f5f7; }
+
+.card-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: flex-start;
+  justify-content: center; padding-top: 1px;
+  color: var(--fgv-text);
+}
+.card-icon svg { width: 24px; height: 24px; stroke-width: 1.5; }
+
+.card-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--fgv-text);
+  margin-bottom: 6px; line-height: 1.3;
+}
+.card-desc {
+  font-size: 12.5px; color: var(--fgv-text-muted); line-height: 1.5;
+}
+
+.category-panel { display: none; }
+.category-panel.active { display: block; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300; align-items: flex-start; justify-content: center;
+  padding-top: 40px;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: white; border-radius: 3px;
+  width: 640px; max-width: 96vw;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column;
+}
+
+/* Header branco, sem linha separadora pesada */
+.modal-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #ebecf0;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.modal-header-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fgv-text); margin-top: 1px;
+}
+.modal-header-icon svg { width: 26px; height: 26px; stroke-width: 1.4; }
+.modal-header-text { flex: 1; }
+.modal-header-text h2 {
+  font-size: 16px; font-weight: 700;
+  color: var(--fgv-text); margin-bottom: 2px;
+}
+.modal-subtitle { font-size: 12px; color: var(--fgv-text-muted); }
+.modal-close {
+  background: none; border: none; font-size: 20px;
+  color: var(--fgv-text-muted); cursor: pointer;
+  padding: 0; line-height: 1; margin-left: 8px; margin-top: 2px;
+}
+.modal-close:hover { color: var(--fgv-text); }
+
+.modal-body { padding: 20px 20px 8px; }
+
+.modal-notice {
+  font-size: 12px; color: var(--fgv-text-muted); margin-bottom: 18px;
+}
+.modal-notice strong { color: #de350b; }
+
+/* Labels — peso normal como no JSM */
+.form-row { margin-bottom: 16px; }
+.form-label {
+  display: flex; align-items: center; gap: 2px;
+  font-size: 13px; font-weight: 400;
+  color: var(--fgv-text); margin-bottom: 5px;
+}
+.form-label .req { color: #de350b; margin-left: 1px; }
+
+.form-control {
+  width: 100%; padding: 7px 10px;
+  border: 2px solid var(--fgv-border);
+  border-radius: 3px; font-size: 14px;
+  font-family: inherit; color: var(--fgv-text);
+  outline: none; transition: border-color 0.15s; background: white;
+}
+.form-control:focus { border-color: var(--fgv-blue-light); }
+select.form-control { cursor: pointer; }
+textarea.form-control { resize: vertical; min-height: 90px; }
+
+/* Campos 2 col */
+.form-row-2col { display: flex; gap: 14px; margin-bottom: 16px; }
+.form-row-2col .form-row { flex: 1; margin-bottom: 0; }
+
+/* Radio */
+.radio-group { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.radio-option {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13.5px; color: var(--fgv-text);
+  cursor: pointer; line-height: 1.4;
+}
+.radio-option input[type="radio"] {
+  margin-top: 2px; flex-shrink: 0;
+  accent-color: var(--fgv-blue); width: 15px; height: 15px;
+}
+
+/* Hint */
+.form-hint {
+  display: flex; gap: 8px; align-items: flex-start;
+  background: #e8f0fe; border: 1px solid #c0d4f5;
+  border-radius: 3px; padding: 8px 12px;
+  font-size: 12px; color: #1a3a6e; line-height: 1.5;
+  margin-bottom: 10px;
+}
+.form-hint svg { color: #004fa3; flex-shrink: 0; margin-top: 1px; }
+.form-hint-warn { background: #fff8e1; border-color: #ffe082; color: #5d4037; }
+.form-hint-warn svg { color: #f57c00; }
+
+/* Condicional */
+.conditional-block { display: none; }
+.conditional-block.visible { display: block; }
+
+/* Tooltip — ícone ⓘ azul preenchido, estilo JSM */
+.tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+.tooltip-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; margin-left: 5px; cursor: help; flex-shrink: 0;
+  color: #0052cc;
+}
+.tooltip-icon svg { width: 16px; height: 16px; }
+.tooltip-box {
+  display: none; position: absolute;
+  bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: #172b4d; color: white;
+  font-size: 12px; line-height: 1.5;
+  padding: 8px 12px; border-radius: 4px;
+  width: 240px; z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  pointer-events: none; font-weight: 400;
+}
+.tooltip-wrap:hover .tooltip-box { display: block; }
+
+/* Modal footer */
+.modal-footer {
+  padding: 12px 20px 18px;
+  display: flex; gap: 8px; justify-content: flex-end;
+  border-top: 1px solid #ebecf0; margin-top: 16px;
+}
+.btn {
+  padding: 7px 20px; border-radius: 3px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  border: none; transition: background 0.15s;
+}
+.btn-primary { background: var(--fgv-blue); color: white; }
+.btn-primary:hover { background: var(--fgv-blue-mid); }
+.btn-secondary { background: white; color: var(--fgv-text); border: 1px solid var(--fgv-border); }
+.btn-secondary:hover { background: #f4f5f7; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--fgv-blue);
+  color: rgba(255,255,255,0.75);
+  text-align: center; padding: 22px 20px; font-size: 13px;
+}
+footer a { color: white; font-weight: 700; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .page-body { flex-direction: column; padding: 20px 16px; }
+  .sidebar { width: 100%; margin-bottom: 24px; }
+  .content { padding-left: 0; }
+  .cards-grid { grid-template-columns: 1fr 1fr; }
+  .topbar-breadcrumb { display: none; }
+  .topbar-actions { display: none; }
+  .topbar-center { position: static; transform: none; }
+  .form-row-2col { flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .cards-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="#">Portal de Serviços FGV</a>
+    <span class="sep"> › </span>
+    <a href="#">SOL – Soluções Educacionais</a>
+    <span class="sep"> › </span>
+    <span style="color:rgba(255,255,255,0.5)">Solicitação de Serviços</span>
+  </nav>
+  <div class="topbar-center">
+    <!-- FGV logo com asa -->
+    <svg width="90" height="24" viewBox="0 0 90 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="20" y="20" font-family="Arial" font-weight="900" font-size="20" fill="white" letter-spacing="2">FGV</text>
+      <polyline points="0,6 10,2 14,10 4,14" stroke="white" stroke-width="1.5" fill="none"/>
+    </svg>
+  </div>
+  <div class="topbar-actions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <div class="avatar">SO</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <h1>Portal de Serviços – SOL Soluções Educacionais</h1>
+  <div class="hero-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="Como podemos ajudar?" id="search-input">
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="page-body">
+  <aside class="sidebar">
+    <div class="sidebar-label">Categorias</div>
+    <button class="sidebar-item active" onclick="showCategory('conteudo',this)">Produção de Conteúdo</button>
+    <button class="sidebar-item" onclick="showCategory('audiovisual',this)">Audiovisual e Editorial</button>
+  </aside>
+
+  <section class="content">
+
+    <!-- PRODUÇÃO DE CONTEÚDO -->
+    <div id="cat-conteudo" class="category-panel active">
+      <div class="cards-grid">
+        <a class="service-card" href="#" onclick="openModal('lms');return false;">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <line x1="12" y1="7" x2="16" y2="7"/><line x1="9" y1="7" x2="9.01" y2="7"/>
+              <line x1="12" y1="11" x2="16" y2="11"/><line x1="9" y1="11" x2="9.01" y2="11"/>
+            </svg>
+          </div>
+          <div class="card-text">
+            <div class="card-title">Pedido de Conteúdo LMS</div>
+            <div class="card-desc">Solicite a produção ou atualização de disciplina no ambiente de aprendizagem.</div>
+          </div>
+        </a>
+        <a class="service-card" href="#" onclick="openModal('atividade');return false;">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/>
+              <path d="M16 14l1.5 1.5L20 12"/>
+            </svg>
+          </div>
+          <div class="card-text">
+            <div class="card-title">Atividade Individual Customizada</div>
+            <div class="card-desc">Solicite a criação de atividades avaliativas customizadas para disciplinas específicas.</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- AUDIOVISUAL E EDITORIAL -->
+    <div id="cat-audiovisual" class="category-panel">
+      <div class="cards-grid">
+        <a class="service-card" href="#" onclick="openModal('video');return false;">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+          </div>
+          <div class="card-text">
+            <div class="card-title">Gravação de Vídeo</div>
+            <div class="card-desc">Solicite gravação de vídeoaulas, apresentações ou conteúdos audiovisuais.</div>
+          </div>
+        </a>
+        <a class="service-card" href="#" onclick="openModal('revisao');return false;">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/>
+              <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/>
+            </svg>
+          </div>
+          <div class="card-text">
+            <div class="card-title">Revisão e Edição de Material</div>
+            <div class="card-desc">Solicite revisão textual, diagramação ou edição de materiais didáticos.</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ══ MODAL: LMS ══ -->
+<div class="modal-overlay" id="modal-lms" onclick="closeModalOutside(event,'modal-lms')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div class="modal-header-text">
+        <h2>Pedido de Conteúdo LMS</h2>
+        <div class="modal-subtitle">SOL – Soluções Educacionais</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-lms')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-notice">Os campos obrigatórios estão marcados com asterisco <strong>*</strong></div>
+
+      <div class="form-row">
+        <label class="form-label">Tipo de conteúdo LMS <span class="req">*</span></label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Curta Duração"> Curta Duração</label>
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Média Duração"> Média Duração</label>
+          <label class="radio-option"><input type="radio" name="lms-tipo" value="Longa Duração (MBA ou Pós)"> Longa Duração (MBA ou Pós)</label>
+        </div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Nome do curso <span class="req">*</span></label>
+          <input type="text" class="form-control" id="lms-curso" placeholder="Ex.: MBA em Gestão Empresarial">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Cliente / área solicitante <span class="req">*</span>
+            <span class="tooltip-wrap">
+              <span class="tooltip-icon">
+                <svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              </span>
+              <span class="tooltip-box">Informe a unidade, escola ou área responsável. Ex.: FGV EAESP, IDE, Corporativo IC.</span>
+            </span>
+          </label>
+          <input type="text" class="form-control" id="lms-cliente" placeholder="Ex.: IDE, FGV EAESP">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Nome da disciplina <span class="req">*</span></label>
+        <input type="text" class="form-control" id="lms-disciplina" placeholder="Ex.: Fundamentos de Marketing Digital">
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Período inicial <span class="req">*</span></label>
+          <input type="date" class="form-control" id="lms-inicio">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Período final <span class="req">*</span></label>
+          <input type="date" class="form-control" id="lms-fim">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Haverá customização de disciplina? <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">Adaptações específicas no conteúdo padrão — inclusão de materiais, ajustes de ementa ou configurações diferenciadas.</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-custom" value="Sim" onchange="toggleBlock('lms-custom-desc',true)"> Sim</label>
+          <label class="radio-option"><input type="radio" name="lms-custom" value="Não" onchange="toggleBlock('lms-custom-desc',false)"> Não</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-custom-desc">
+        <div class="form-row">
+          <label class="form-label">Descreva a customização <span class="req">*</span></label>
+          <textarea class="form-control" id="lms-custom-texto" placeholder="Descreva as customizações necessárias..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Haverá atividade individual customizada? <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">Atividade avaliativa criada especificamente para esta disciplina. Baixe a matriz em: fgvbr.sharepoint.com → Modelo-FGV2.</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (com anexo)" onchange="handleAIChange(this.value)"> Sim (com anexo)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (enviará o anexo posteriormente)" onchange="handleAIChange(this.value)"> Sim (enviará o anexo posteriormente)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Sim (customizada pelo professor)" onchange="handleAIChange(this.value)"> Sim (customizada pelo professor)</label>
+          <label class="radio-option"><input type="radio" name="lms-ai" value="Não" onchange="handleAIChange(this.value)"> Não</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-ai-upload">
+        <div class="form-row">
+          <label class="form-label">Matriz da atividade individual <span class="req">*</span></label>
+          <div class="form-hint form-hint-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Baixe a matriz padrão antes de preencher: <strong>fgvbr.sharepoint.com → Modelo-FGV2</strong>. Aceitos: Word, Excel, PPT, PDF, imagem (máx. 100 MB).</span>
+          </div>
+          <input type="file" class="form-control" id="lms-matriz" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.jpg,.jpeg,.png">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Fórmula de cálculo da Média Online (MO) <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">AI = Atividade Individual. PI = Prova Individual. Selecione a fórmula aplicada a esta disciplina.</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=50% + PI=50%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=50% + PI=50%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=70% + PI=30%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=70% + PI=30%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="MO (AI=40% + PI=60%)" onchange="toggleBlock('lms-mo-outro',false)"> MO (AI=40% + PI=60%)</label>
+          <label class="radio-option"><input type="radio" name="lms-mo" value="Outros" onchange="toggleBlock('lms-mo-outro',true)"> Outros</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="lms-mo-outro">
+        <div class="form-row">
+          <label class="form-label">Informe a fórmula da MO <span class="req">*</span></label>
+          <input type="text" class="form-control" id="lms-mo-texto" placeholder="Ex.: AI=60% + PI=40%">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">ROL <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">ROL (Resultado Online): registro do desempenho do aluno na disciplina.</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="lms-rol" value="Haverá ROL"> Haverá ROL</label>
+          <label class="radio-option"><input type="radio" name="lms-rol" value="Não haverá ROL"> Não haverá ROL</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="lms-complementar" placeholder="Adicione qualquer informação adicional relevante..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-lms')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitLMS()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: ATIVIDADE ══ -->
+<div class="modal-overlay" id="modal-atividade" onclick="closeModalOutside(event,'modal-atividade')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6"/><path d="M9 12h6"/><path d="M9 15h4"/><path d="M16 14l1.5 1.5L20 12"/></svg>
+      </div>
+      <div class="modal-header-text">
+        <h2>Atividade Individual Customizada</h2>
+        <div class="modal-subtitle">SOL – Soluções Educacionais</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-atividade')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-notice">Os campos obrigatórios estão marcados com asterisco <strong>*</strong></div>
+      <div class="form-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Baixe a <strong>matriz padrão</strong> antes de preenchê-la: <strong>fgvbr.sharepoint.com → Modelo-FGV2</strong>.</span>
+      </div>
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Nome do curso <span class="req">*</span></label>
+          <input type="text" class="form-control" id="ai-curso" placeholder="Ex.: MBA em Gestão de Projetos">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Nome da disciplina <span class="req">*</span></label>
+          <input type="text" class="form-control" id="ai-disciplina" placeholder="Ex.: Gestão Ágil">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Cliente / área solicitante <span class="req">*</span></label>
+        <input type="text" class="form-control" id="ai-cliente" placeholder="Ex.: IDE, FGV EAESP, Corporativo IC">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tipo de entrega <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">Se a matriz ainda não estiver pronta, escolha "Enviará posteriormente".</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="ai-entrega" value="Com anexo" onchange="toggleBlock('ai-upload',true)"> Com anexo agora</label>
+          <label class="radio-option"><input type="radio" name="ai-entrega" value="Posteriormente" onchange="toggleBlock('ai-upload',false)"> Enviará o anexo posteriormente</label>
+          <label class="radio-option"><input type="radio" name="ai-entrega" value="Pelo professor" onchange="toggleBlock('ai-upload',false)"> Customizada pelo professor</label>
+        </div>
+      </div>
+      <div class="conditional-block" id="ai-upload">
+        <div class="form-row">
+          <label class="form-label">Anexar matriz da atividade <span class="req">*</span></label>
+          <input type="file" class="form-control" id="ai-matriz" accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.jpg,.jpeg,.png">
+          <div style="font-size:11.5px;color:var(--fgv-text-muted);margin-top:4px">Word, Excel, PPT, PDF, imagem. Máx. 100 MB.</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descrição da atividade <span class="req">*</span></label>
+        <textarea class="form-control" id="ai-descricao" placeholder="Descreva o objetivo, formato e critérios de avaliação..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="ai-complementar" placeholder="Informações adicionais relevantes..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-atividade')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitGenerico('modal-atividade','ai-curso','ai-descricao')">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: VÍDEO ══ -->
+<div class="modal-overlay" id="modal-video" onclick="closeModalOutside(event,'modal-video')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+      </div>
+      <div class="modal-header-text">
+        <h2>Gravação de Vídeo</h2>
+        <div class="modal-subtitle">SOL – Soluções Educacionais</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-video')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-notice">Os campos obrigatórios estão marcados com asterisco <strong>*</strong></div>
+      <div class="form-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Informe o máximo de detalhes para que possamos planejar a produção com antecedência.</span>
+      </div>
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Nome do curso / projeto <span class="req">*</span></label>
+          <input type="text" class="form-control" id="video-curso" placeholder="Ex.: MBA Marketing Digital">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Cliente / área solicitante <span class="req">*</span></label>
+          <input type="text" class="form-control" id="video-cliente" placeholder="Ex.: IDE, FGV EAESP">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tipo de vídeo <span class="req">*</span></label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="video-tipo" value="Vídeoaula"> Vídeoaula</label>
+          <label class="radio-option"><input type="radio" name="video-tipo" value="Apresentação institucional"> Apresentação institucional</label>
+          <label class="radio-option"><input type="radio" name="video-tipo" value="Entrevista"> Entrevista</label>
+          <label class="radio-option"><input type="radio" name="video-tipo" value="Outro"> Outro</label>
+        </div>
+      </div>
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Data desejada para gravação <span class="req">*</span></label>
+          <input type="date" class="form-control" id="video-data">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Duração estimada <span class="req">*</span></label>
+          <input type="text" class="form-control" id="video-duracao" placeholder="Ex.: 20 minutos">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descrição do conteúdo <span class="req">*</span></label>
+        <textarea class="form-control" id="video-descricao" placeholder="Tema, objetivos e roteiro previsto para a gravação..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Anexo (roteiro, apresentação ou referência)</label>
+        <input type="file" class="form-control" id="video-anexo" accept=".pdf,.ppt,.pptx,.doc,.docx">
+        <div style="font-size:11.5px;color:var(--fgv-text-muted);margin-top:4px">PDF, PPT, Word. Máx. 100 MB.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="video-complementar" placeholder="Informações adicionais sobre a produção..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-video')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitGenerico('modal-video','video-curso','video-descricao')">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: REVISÃO ══ -->
+<div class="modal-overlay" id="modal-revisao" onclick="closeModalOutside(event,'modal-revisao')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+      </div>
+      <div class="modal-header-text">
+        <h2>Revisão e Edição de Material</h2>
+        <div class="modal-subtitle">SOL – Soluções Educacionais</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-revisao')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-notice">Os campos obrigatórios estão marcados com asterisco <strong>*</strong></div>
+      <div class="form-hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Anexe o material a ser revisado sempre que possível para agilizar o atendimento.</span>
+      </div>
+      <div class="form-row-2col">
+        <div class="form-row">
+          <label class="form-label">Nome do material / disciplina <span class="req">*</span></label>
+          <input type="text" class="form-control" id="rev-material" placeholder="Ex.: Apostila – Fundamentos de Finanças">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Cliente / área solicitante <span class="req">*</span></label>
+          <input type="text" class="form-control" id="rev-cliente" placeholder="Ex.: IDE, FGV EAESP">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tipo de serviço <span class="req">*</span>
+          <span class="tooltip-wrap">
+            <span class="tooltip-icon"><svg viewBox="0 0 24 24" fill="#0052cc" stroke="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></span>
+            <span class="tooltip-box">Revisão textual: gramática e ortografia. Diagramação: formatação e layout. Edição: alterações no conteúdo.</span>
+          </span>
+        </label>
+        <div class="radio-group">
+          <label class="radio-option"><input type="radio" name="rev-tipo" value="Revisão textual"> Revisão textual</label>
+          <label class="radio-option"><input type="radio" name="rev-tipo" value="Diagramação"> Diagramação</label>
+          <label class="radio-option"><input type="radio" name="rev-tipo" value="Edição de conteúdo"> Edição de conteúdo</label>
+          <label class="radio-option"><input type="radio" name="rev-tipo" value="Revisão + Diagramação"> Revisão + Diagramação</label>
+          <label class="radio-option"><input type="radio" name="rev-tipo" value="Outro"> Outro</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Data de entrega desejada <span class="req">*</span></label>
+        <input type="date" class="form-control" id="rev-prazo">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descrição das alterações / orientações <span class="req">*</span></label>
+        <textarea class="form-control" id="rev-descricao" placeholder="Descreva o que precisa ser revisado, corrigido ou adequado..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Anexar material <span class="req">*</span></label>
+        <input type="file" class="form-control" id="rev-arquivo" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+        <div style="font-size:11.5px;color:var(--fgv-text-muted);margin-top:4px">PDF, Word, PPT, Excel. Máx. 100 MB.</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Informação complementar</label>
+        <textarea class="form-control" id="rev-complementar" placeholder="Informações adicionais..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-revisao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitGenerico('modal-revisao','rev-material','rev-descricao')">Criar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <p>Copyright &copy; 2025 FGV &ndash; Todos os Direitos Reservados.<br>
+  <a href="#">Política de Privacidade</a></p>
+</footer>
+
+<script>
+function showCategory(cat, btn) {
+  document.querySelectorAll('.category-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('cat-' + cat).classList.add('active');
+  btn.classList.add('active');
+}
+function openModal(id) { document.getElementById('modal-' + id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+function toggleBlock(id, show) { document.getElementById(id).classList.toggle('visible', show); }
+function handleAIChange(val) { toggleBlock('lms-ai-upload', val === 'Sim (com anexo)'); }
+
+function submitLMS() {
+  const tipo       = document.querySelector('input[name="lms-tipo"]:checked');
+  const curso      = document.getElementById('lms-curso').value.trim();
+  const cliente    = document.getElementById('lms-cliente').value.trim();
+  const disciplina = document.getElementById('lms-disciplina').value.trim();
+  const inicio     = document.getElementById('lms-inicio').value;
+  const fim        = document.getElementById('lms-fim').value;
+  const custom     = document.querySelector('input[name="lms-custom"]:checked');
+  const customTxt  = document.getElementById('lms-custom-texto').value.trim();
+  const ai         = document.querySelector('input[name="lms-ai"]:checked');
+  const mo         = document.querySelector('input[name="lms-mo"]:checked');
+  const moTxt      = document.getElementById('lms-mo-texto').value.trim();
+  const rol        = document.querySelector('input[name="lms-rol"]:checked');
+
+  if (!tipo)       { alert('Selecione o tipo de conteúdo LMS.'); return; }
+  if (!curso)      { alert('Informe o nome do curso.'); document.getElementById('lms-curso').focus(); return; }
+  if (!cliente)    { alert('Informe o cliente / área solicitante.'); document.getElementById('lms-cliente').focus(); return; }
+  if (!disciplina) { alert('Informe o nome da disciplina.'); document.getElementById('lms-disciplina').focus(); return; }
+  if (!inicio)     { alert('Informe o período inicial.'); return; }
+  if (!fim)        { alert('Informe o período final.'); return; }
+  if (!custom)     { alert('Informe se haverá customização de disciplina.'); return; }
+  if (custom.value === 'Sim' && !customTxt) { alert('Descreva a customização.'); document.getElementById('lms-custom-texto').focus(); return; }
+  if (!ai)         { alert('Informe se haverá atividade individual customizada.'); return; }
+  if (!mo)         { alert('Selecione a fórmula da Média Online.'); return; }
+  if (mo.value === 'Outros' && !moTxt) { alert('Informe a fórmula da MO.'); document.getElementById('lms-mo-texto').focus(); return; }
+  if (!rol)        { alert('Informe se haverá ROL.'); return; }
+
+  closeModal('modal-lms');
+  setTimeout(() => alert('✅ Solicitação criada com sucesso!\n\nVocê receberá um e-mail com o número do chamado em breve.'), 150);
+}
+
+function submitGenerico(modalId, campoNome, campoDesc) {
+  const nome = document.getElementById(campoNome).value.trim();
+  const desc = document.getElementById(campoDesc).value.trim();
+  if (!nome) { alert('Preencha o campo de nome obrigatório.'); document.getElementById(campoNome).focus(); return; }
+  if (!desc) { alert('Preencha o campo de descrição.'); document.getElementById(campoDesc).focus(); return; }
+  closeModal(modalId);
+  setTimeout(() => alert('✅ Solicitação criada com sucesso!\n\nVocê receberá um e-mail com o número do chamado em breve.'), 150);
+}
+
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.service-card').forEach(card => {
+    card.style.display = (!q || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+</script>
+</body>
+</html>
