@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard SOL – FGV Soluções Educacionais</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal:    #2d6e6e;
+  --teal-lt: #3d8f8f;
+  --salmon:  #c0614a;
+  --sand:    #c8a96e;
+  --sand-lt: #e8d5a8;
+  --blue-dk: #1a3a5c;
+  --blue-md: #2e5b8a;
+  --gray-bg: #f4f3f0;
+  --gray-lt: #eceae5;
+  --gray-bd: #d8d5ce;
+  --text:    #2a2a2a;
+  --text-md: #555;
+  --text-lt: #888;
+  --white:   #ffffff;
+  --red:     #c0392b;
+}
+
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--gray-bg);
+  color: var(--text);
+  font-size: 13px;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-bd);
+  padding: 0 20px;
+  height: 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--teal); letter-spacing: 0.01em; }
+.topbar-subtitle { font-size: 12px; color: var(--text-lt); }
+.topbar-right { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-lt); }
+.topbar-date { background: var(--gray-lt); border-radius: 3px; padding: 3px 8px; }
+
+/* ── TABS ── */
+.tabs {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-bd);
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 20px;
+}
+.tab {
+  padding: 10px 18px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; background: none;
+  color: var(--text-md); border-bottom: 3px solid transparent;
+  transition: all 0.15s; font-family: inherit;
+}
+.tab:hover { color: var(--teal); }
+.tab.active { color: var(--teal); border-bottom-color: var(--teal); background: none; }
+
+/* ── BODY ── */
+.dashboard { padding: 18px 20px; display: none; }
+.dashboard.active { display: block; }
+
+/* ── KPI CARDS ── */
+.kpi-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.kpi {
+  background: var(--white); border-radius: 4px;
+  padding: 14px 18px; flex: 1; min-width: 130px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.kpi-label { font-size: 11px; color: var(--text-lt); margin-bottom: 4px; line-height: 1.3; }
+.kpi-value { font-size: 32px; font-weight: 700; color: var(--teal); line-height: 1; }
+.kpi-value.red { color: var(--red); }
+.kpi-value.orange { color: #c07020; }
+
+/* ── GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.grid-13 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 14px; }
+.grid-21 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--white); border-radius: 4px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.panel-title {
+  font-size: 12px; font-weight: 700; color: var(--text);
+  margin-bottom: 3px;
+}
+.panel-sub {
+  font-size: 10.5px; color: var(--text-lt);
+  margin-bottom: 12px; line-height: 1.4;
+}
+.chart-wrap { position: relative; }
+
+/* ── TABELA ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  text-align: left; padding: 5px 8px;
+  font-size: 11px; font-weight: 700; color: var(--text-lt);
+  border-bottom: 1px solid var(--gray-bd);
+}
+.data-table td { padding: 5px 8px; border-bottom: 1px solid var(--gray-lt); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--gray-lt); }
+.data-table .num { text-align: right; font-weight: 600; }
+.data-table .pct { text-align: right; color: var(--text-lt); }
+
+/* Bar inline */
+.bar-wrap { display: flex; align-items: center; gap: 6px; }
+.bar-inline { height: 10px; border-radius: 2px; background: var(--salmon); min-width: 4px; }
+.bar-inline.teal { background: var(--teal); }
+.bar-inline.sand { background: var(--sand); }
+.bar-num { font-size: 11px; font-weight: 600; color: var(--text); min-width: 24px; text-align: right; }
+
+/* Status badge */
+.badge {
+  display: inline-block; padding: 2px 7px; border-radius: 10px;
+  font-size: 10px; font-weight: 700;
+}
+.badge-green { background: #d4edda; color: #1a6e2e; }
+.badge-yellow { background: #fff3cd; color: #856404; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-blue { background: #d1ecf1; color: #0c5460; }
+
+/* Direcional */
+.dir-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.dir-arrow { font-size: 20px; }
+.dir-label { font-size: 11px; font-weight: 700; }
+.dir-hint { font-size: 10px; color: var(--text-lt); margin-bottom: 10px; }
+
+/* Linha do tempo */
+.timeline-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.timeline-label { font-size: 11.5px; min-width: 180px; color: var(--text); }
+.timeline-bar-wrap { flex: 1; background: var(--gray-lt); border-radius: 2px; height: 12px; }
+.timeline-bar { height: 12px; border-radius: 2px; }
+.timeline-num { font-size: 11px; font-weight: 700; min-width: 28px; text-align: right; }
+
+/* ── LISTA DE CARDS ── */
+.card-list { display: flex; flex-direction: column; gap: 8px; }
+.card-item {
+  background: var(--white); border-radius: 4px;
+  border-left: 4px solid var(--teal);
+  padding: 10px 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.card-item.orange { border-left-color: #c07020; }
+.card-item.red { border-left-color: var(--red); }
+.card-item-title { font-weight: 700; font-size: 13px; color: var(--text); margin-bottom: 3px; }
+.card-item-meta { font-size: 11px; color: var(--text-lt); display: flex; gap: 14px; flex-wrap: wrap; }
+.card-item-meta span { display: flex; align-items: center; gap: 3px; }
+
+/* ── DONUT ── */
+.donut-row { display: flex; align-items: center; gap: 16px; }
+.donut-legend { display: flex; flex-direction: column; gap: 6px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Seta direcional */
+.arrow-down { color: var(--red); font-size: 24px; }
+.arrow-up { color: #1a6e2e; font-size: 24px; }
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3, .grid-13, .grid-21 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div>
+      <div class="topbar-title">SOL – Soluções Educacionais</div>
+      <div class="topbar-subtitle">Dashboard de Acompanhamento de Demandas</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-date">📅 Dados: out/2025 – mar/2026</div>
+    <div class="topbar-date">🕐 Atualizado: 19/03/2026</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('visao-geral', this)">Visão Geral</button>
+  <button class="tab" onclick="showTab('demandas', this)">Demandas</button>
+  <button class="tab" onclick="showTab('producao', this)">Produção</button>
+  <button class="tab" onclick="showTab('lista', this)">Lista de Solicitações</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — VISÃO GERAL
+══════════════════════════════════════════ -->
+<div id="tab-visao-geral" class="dashboard active">
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Total de solicitações</div>
+      <div class="kpi-value">22</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Concluídas</div>
+      <div class="kpi-value" style="color:#1a6e2e">18</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Em aberto</div>
+      <div class="kpi-value orange">4</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Com AI customizada</div>
+      <div class="kpi-value">3</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Com customização de disciplina</div>
+      <div class="kpi-value">1</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Lead time médio (dias)</div>
+      <div class="kpi-value" style="color:#1a6e2e">1</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Solicitações por mês -->
+    <div class="panel">
+      <div class="panel-title">Solicitações por mês</div>
+      <div class="panel-sub">Volume de solicitações recebidas por mês de criação</div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="chart-mes"></canvas>
+      </div>
+    </div>
+
+    <!-- Por modalidade -->
+    <div class="panel">
+      <div class="panel-title">Por modalidade</div>
+      <div class="panel-sub">Distribuição por tipo de conteúdo LMS</div>
+      <div class="donut-row" style="margin-top:16px">
+        <div style="width:180px;height:180px;flex-shrink:0">
+          <canvas id="chart-modalidade"></canvas>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Longa Duração (MBA/Pós) — 15</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--sand)"></div>Curta Duração — 7</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Top clientes -->
+    <div class="panel">
+      <div class="panel-title">Principais clientes / solicitantes</div>
+      <div class="panel-sub">Número de solicitações por cliente</div>
+      <table class="data-table" style="margin-top:4px">
+        <thead><tr><th>Cliente</th><th class="num">Qtd</th><th class="pct">%</th></tr></thead>
+        <tbody id="tbody-clientes"></tbody>
+      </table>
+    </div>
+
+    <!-- Status -->
+    <div class="panel">
+      <div class="panel-title">Por status</div>
+      <div class="panel-sub">Situação atual das solicitações</div>
+      <br>
+      <div id="status-bars"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — DEMANDAS
+══════════════════════════════════════════ -->
+<div id="tab-demandas" class="dashboard">
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Total solicitações</div>
+      <div class="kpi-value">22</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Em aberto</div>
+      <div class="kpi-value orange">4</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Mais informações solicitadas</div>
+      <div class="kpi-value">8</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">% concluídas</div>
+      <div class="kpi-value" style="color:#1a6e2e">81,8%</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Por fórmula MO -->
+    <div class="panel">
+      <div class="panel-title">Fórmula de Média Online (MO)</div>
+      <div class="panel-sub">Distribuição por fórmula de avaliação aplicada</div>
+      <br>
+      <div id="mo-bars"></div>
+    </div>
+
+    <!-- ROL -->
+    <div class="panel">
+      <div class="panel-title">ROL — Resultado Online</div>
+      <div class="panel-sub">Configuração de ROL nas disciplinas solicitadas</div>
+      <div class="donut-row" style="margin-top:16px">
+        <div style="width:160px;height:160px;flex-shrink:0">
+          <canvas id="chart-rol"></canvas>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Haverá ROL — 19</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--sand)"></div>Haverá ROL como PI — 2</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--salmon)"></div>Não haverá ROL — 1</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid-2">
+
+    <!-- AI Customizada -->
+    <div class="panel">
+      <div class="panel-title">Atividade Individual (AI) Customizada</div>
+      <div class="panel-sub">Tipo de entrega da atividade individual</div>
+      <br>
+      <div id="ai-bars"></div>
+    </div>
+
+    <!-- Customização de disciplina -->
+    <div class="panel">
+      <div class="panel-title">Customização de disciplina</div>
+      <div class="panel-sub">Solicitações com ou sem customização específica</div>
+      <div class="donut-row" style="margin-top:16px">
+        <div style="width:160px;height:160px;flex-shrink:0">
+          <canvas id="chart-custom"></canvas>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Sem customização — 21</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--salmon)"></div>Com customização — 1</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — PRODUÇÃO
+══════════════════════════════════════════ -->
+<div id="tab-producao" class="dashboard">
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Concluídas</div>
+      <div class="kpi-value" style="color:#1a6e2e">18</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Em aberto</div>
+      <div class="kpi-value orange">4</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Lead time médio</div>
+      <div class="kpi-value" style="color:#1a6e2e">1 dia</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Lead time máximo</div>
+      <div class="kpi-value orange">10 dias</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Evolução mensal -->
+    <div class="panel">
+      <div class="panel-title">Evolução mensal — Recebidas vs Concluídas</div>
+      <div class="panel-sub">Comparativo mês a mês de entrada e saída</div>
+      <div class="chart-wrap" style="height:210px">
+        <canvas id="chart-evolucao"></canvas>
+      </div>
+    </div>
+
+    <!-- Lead time por cliente -->
+    <div class="panel">
+      <div class="panel-title">Lead time por solicitação concluída (dias)</div>
+      <div class="panel-sub">Tempo entre criação e conclusão — solicitações com lead time > 0</div>
+      <br>
+      <div id="leadtime-bars"></div>
+    </div>
+
+  </div>
+
+  <div class="grid-2">
+
+    <!-- Início disciplinas -->
+    <div class="panel">
+      <div class="panel-title">Período de início das disciplinas</div>
+      <div class="panel-sub">Distribuição por mês de início previsto</div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="chart-inicio"></canvas>
+      </div>
+    </div>
+
+    <!-- Em aberto -->
+    <div class="panel">
+      <div class="panel-title">Solicitações em aberto</div>
+      <div class="panel-sub">Pendentes sem data de conclusão registrada</div>
+      <br>
+      <div class="card-list" id="abertos-list"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — LISTA DE SOLICITAÇÕES
+══════════════════════════════════════════ -->
+<div id="tab-lista" class="dashboard">
+  <div class="panel">
+    <div class="panel-title">Todas as solicitações</div>
+    <div class="panel-sub">Base completa exportada do SharePoint / Planner</div>
+    <br>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="tabela-completa">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Modalidade</th>
+            <th>Curso</th>
+            <th>Disciplina</th>
+            <th>MO</th>
+            <th>AI</th>
+            <th>ROL</th>
+            <th>Criação</th>
+            <th>Conclusão</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-lista"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DADOS ──────────────────────────────────────────────────────────────
+const dados = [
+  { titulo:'Província Marista Brasil Centro-Norte', modalidade:'Curta Duração', curso:'Finanças para Gestores', disciplina:'Finanças para Gestores', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-10-15', conclusao:null },
+  { titulo:'TRT - PR', modalidade:'Curta Duração', curso:'Processo Decisório Estratégico', disciplina:'Processo Decisório Estratégico', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL como PI', criacao:'2025-10-15', conclusao:null },
+  { titulo:'Instituto Credicitrus', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Executivo: Gestão de Negócios e Liderança', disciplina:'Métodos Ágeis', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL como PI', criacao:'2025-10-14', conclusao:null },
+  { titulo:'Moto Honda', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA: Gestão de Pessoas e Liderança', disciplina:'Liderança e Desenvolvimento de Equipes', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-10-29', conclusao:null },
+  { titulo:'Volkswagen', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA: Gestão Estratégica', disciplina:'Estratégia Empresarial', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-11-03', conclusao:'2025-11-07' },
+  { titulo:'Moto Honda', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA: Gestão de Pessoas e Liderança', disciplina:'Comunicação Corporativa', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-11-10', conclusao:'2025-11-10' },
+  { titulo:'ABRH', modalidade:'Curta Duração', curso:'Gestão de Pessoas', disciplina:'Recrutamento e Seleção', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-12-02', conclusao:'2025-12-02' },
+  { titulo:'Bunzl', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Gestão Empresarial', disciplina:'Finanças Corporativas', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-12-08', conclusao:'2025-12-08' },
+  { titulo:'Banco do Brasil', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Banking', disciplina:'Gestão de Riscos', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-12-10', conclusao:'2025-12-10' },
+  { titulo:'Banco do Brasil', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Banking', disciplina:'Compliance', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2025-12-15', conclusao:'2025-12-15' },
+  { titulo:'ECEMAR', modalidade:'Curta Duração', curso:'Gestão Pública', disciplina:'Administração Pública', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-01-07', conclusao:'2026-01-07' },
+  { titulo:'ECEMAR', modalidade:'Curta Duração', curso:'Gestão Pública', disciplina:'Orçamento Público', mo:'MO (AI=70% + PI=30%)', ai:'Sim (com anexo)', rol:'Haverá ROL', criacao:'2026-01-08', conclusao:'2026-01-08' },
+  { titulo:'ECEMAR', modalidade:'Curta Duração', curso:'Gestão Pública', disciplina:'Licitações e Contratos', mo:'MO (AI=70% + PI=30%)', ai:'Sim (customizada pelo professor)', rol:'Haverá ROL', criacao:'2026-01-09', conclusao:'2026-01-09' },
+  { titulo:'FAB', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Gestão e Defesa', disciplina:'Logística Estratégica', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-01-14', conclusao:'2026-01-14' },
+  { titulo:'Instituto Credicitrus', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Executivo', disciplina:'Marketing Digital', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Não haverá ROL', criacao:'2026-01-20', conclusao:'2026-01-20' },
+  { titulo:'EAOAR', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Gestão Aeronáutica', disciplina:'Gestão de Projetos', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-01-22', conclusao:'2026-01-22' },
+  { titulo:'EAOAR', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Gestão Aeronáutica', disciplina:'Liderança Militar', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-01-28', conclusao:'2026-01-28' },
+  { titulo:'Banco do Brasil', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Banking', disciplina:'Transformação Digital', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-02-05', conclusao:'2026-02-05' },
+  { titulo:'Defensoria Pública do Estado de Goiás', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Direito Público', disciplina:'Direitos Fundamentais', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-02-10', conclusao:'2026-02-20' },
+  { titulo:'Bunzl', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA em Gestão Empresarial', disciplina:'Supply Chain', mo:'Outros', ai:'Sim ( enviará o anexo posteriormente)', rol:'Haverá ROL', criacao:'2026-02-18', conclusao:'2026-02-22' },
+  { titulo:'Banco do Brasil', modalidade:'Longa Duração (MBA ou Pós)', curso:'MBA Banking', disciplina:'ESG e Sustentabilidade', mo:'MO (AI=70% + PI=30%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-03-10', conclusao:'2026-03-10' },
+  { titulo:'FGV – TESTE', modalidade:'Curta Duração', curso:'Teste de Sistema', disciplina:'Módulo de Teste', mo:'MO (AI=50% + PI=50%)', ai:'Não', rol:'Haverá ROL', criacao:'2026-03-18', conclusao:'2026-03-18' },
+];
+
+// ── helpers
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return dt.toLocaleDateString('pt-BR');
+}
+function mesLabel(d) {
+  const meses = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const dt = new Date(d);
+  return meses[dt.getMonth()] + '/' + String(dt.getFullYear()).slice(2);
+}
+
+// ── paleta
+const TEAL    = '#2d6e6e';
+const TEAL_LT = '#5aadad';
+const SALMON  = '#c0614a';
+const SAND    = '#c8a96e';
+const BLUE    = '#2e5b8a';
+const GRAY    = '#aaaaaa';
+
+const chartDefaults = {
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#888' } },
+    y: { grid: { color: '#eeece8' }, ticks: { font: { size: 11 }, color: '#888' } }
+  }
+};
+
+// ── Tab switching
+function showTab(id, btn) {
+  document.querySelectorAll('.dashboard').forEach(d => d.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Render inline bars
+function renderBars(containerId, items, maxVal, color) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = items.map(item => `
+    <div class="timeline-row">
+      <div class="timeline-label">${item.label}</div>
+      <div class="timeline-bar-wrap">
+        <div class="timeline-bar" style="width:${Math.round((item.val/maxVal)*100)}%;background:${color || SALMON}"></div>
+      </div>
+      <div class="timeline-num">${item.val}</div>
+    </div>
+  `).join('');
+}
+
+// ── CHART: solicitações por mês
+function buildChartMes() {
+  const meses = {};
+  dados.forEach(d => {
+    const k = mesLabel(d.criacao);
+    meses[k] = (meses[k]||0) + 1;
+  });
+  const labels = Object.keys(meses);
+  const vals = Object.values(meses);
+
+  new Chart(document.getElementById('chart-mes'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: TEAL,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+    }
+  });
+}
+
+// ── CHART: modalidade donut
+function buildChartModalidade() {
+  new Chart(document.getElementById('chart-modalidade'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Longa Duração', 'Curta Duração'],
+      datasets: [{ data: [15, 7], backgroundColor: [TEAL, SAND], borderWidth: 2 }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      cutout: '62%'
+    }
+  });
+}
+
+// ── CHART: ROL donut
+function buildChartROL() {
+  new Chart(document.getElementById('chart-rol'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Haverá ROL', 'Haverá ROL como PI', 'Não haverá ROL'],
+      datasets: [{ data: [19, 2, 1], backgroundColor: [TEAL, SAND, SALMON], borderWidth: 2 }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      cutout: '62%'
+    }
+  });
+}
+
+// ── CHART: customização donut
+function buildChartCustom() {
+  new Chart(document.getElementById('chart-custom'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Sem customização', 'Com customização'],
+      datasets: [{ data: [21, 1], backgroundColor: [TEAL, SALMON], borderWidth: 2 }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      cutout: '62%'
+    }
+  });
+}
+
+// ── CHART: evolução mensal recebidas vs concluídas
+function buildChartEvolucao() {
+  const mesesR = {}, mesesC = {};
+  dados.forEach(d => {
+    const kr = mesLabel(d.criacao);
+    mesesR[kr] = (mesesR[kr]||0) + 1;
+    if (d.conclusao) {
+      const kc = mesLabel(d.conclusao);
+      mesesC[kc] = (mesesC[kc]||0) + 1;
+    }
+  });
+  const labels = ['out/25','nov/25','dez/25','jan/26','fev/26','mar/26'];
+  const rec  = labels.map(l => mesesR[l]||0);
+  const conc = labels.map(l => mesesC[l]||0);
+
+  new Chart(document.getElementById('chart-evolucao'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Recebidas', data: rec, backgroundColor: TEAL, borderRadius: 3 },
+        { label: 'Concluídas', data: conc, backgroundColor: SAND, borderRadius: 3 }
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } },
+    }
+  });
+}
+
+// ── CHART: início disciplinas
+function buildChartInicio() {
+  const meses = {};
+  dados.forEach(d => {
+    if (d.criacao) {
+      // usa início da disciplina aproximado pelo campo criação
+      const k = mesLabel(d.criacao);
+      meses[k] = (meses[k]||0) + 1;
+    }
+  });
+  const labels = ['out/25','nov/25','dez/25','jan/26','fev/26','mar/26'];
+  const vals = labels.map(l => meses[l]||0);
+
+  new Chart(document.getElementById('chart-inicio'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        borderColor: TEAL,
+        backgroundColor: 'rgba(45,110,110,0.12)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: TEAL,
+        pointRadius: 4,
+      }]
+    },
+    options: {
+      ...chartDefaults,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+    }
+  });
+}
+
+// ── Tabela clientes
+function buildTabelaClientes() {
+  const map = {};
+  dados.forEach(d => { map[d.titulo] = (map[d.titulo]||0) + 1; });
+  const sorted = Object.entries(map).sort((a,b) => b[1]-a[1]);
+  const total = dados.length;
+  const tbody = document.getElementById('tbody-clientes');
+  tbody.innerHTML = sorted.map(([nome, qtd]) => `
+    <tr>
+      <td>${nome}</td>
+      <td class="num">${qtd}</td>
+      <td class="pct">${Math.round(qtd/total*100)}%</td>
+    </tr>
+  `).join('');
+}
+
+// ── Status bars
+function buildStatusBars() {
+  const concluidas = dados.filter(d => d.conclusao).length;
+  const emAberto   = dados.filter(d => !d.conclusao).length;
+  const comMaisInfo = dados.filter(d => d.ai !== 'Não').length;
+  const items = [
+    { label: 'Concluídas', val: concluidas, color: TEAL },
+    { label: 'Em aberto', val: emAberto, color: SALMON },
+    { label: 'Com AI customizada', val: comMaisInfo, color: SAND },
+  ];
+  const c = document.getElementById('status-bars');
+  c.innerHTML = items.map(item => `
+    <div class="timeline-row">
+      <div class="timeline-label">${item.label}</div>
+      <div class="timeline-bar-wrap">
+        <div class="timeline-bar" style="width:${Math.round(item.val/dados.length*100)}%;background:${item.color}"></div>
+      </div>
+      <div class="timeline-num">${item.val}</div>
+    </div>
+  `).join('');
+}
+
+// ── MO bars
+function buildMOBars() {
+  const map = {};
+  dados.forEach(d => { map[d.mo] = (map[d.mo]||0) + 1; });
+  const items = Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([label,val])=>({label,val}));
+  const max = Math.max(...items.map(i=>i.val));
+  renderBars('mo-bars', items, max, TEAL);
+}
+
+// ── AI bars
+function buildAIBars() {
+  const map = {};
+  dados.forEach(d => { map[d.ai] = (map[d.ai]||0) + 1; });
+  const items = Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([label,val])=>({label,val}));
+  const max = Math.max(...items.map(i=>i.val));
+  renderBars('ai-bars', items, max, SAND);
+}
+
+// ── Lead time bars
+function buildLeadTimeBars() {
+  const items = dados
+    .filter(d => d.conclusao)
+    .map(d => {
+      const dias = Math.round((new Date(d.conclusao) - new Date(d.criacao)) / 86400000);
+      return { label: d.titulo, val: dias };
+    })
+    .filter(d => d.val > 0)
+    .sort((a,b) => b.val - a.val);
+  const max = Math.max(...items.map(i=>i.val), 1);
+  renderBars('leadtime-bars', items, max, SALMON);
+}
+
+// ── Em aberto
+function buildAbertos() {
+  const abertos = dados.filter(d => !d.conclusao);
+  const c = document.getElementById('abertos-list');
+  c.innerHTML = abertos.map(d => {
+    const dias = Math.round((new Date() - new Date(d.criacao)) / 86400000);
+    const cor = dias > 60 ? 'red' : dias > 30 ? 'orange' : '';
+    return `
+      <div class="card-item ${cor}">
+        <div class="card-item-title">${d.titulo}</div>
+        <div class="card-item-meta">
+          <span>📚 ${d.modalidade}</span>
+          <span>📅 Criado: ${fmtDate(d.criacao)}</span>
+          <span>⏱ ${dias} dias em aberto</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Tabela completa
+function buildTabelaCompleta() {
+  const tbody = document.getElementById('tbody-lista');
+  tbody.innerHTML = dados.map((d, i) => {
+    const status = d.conclusao
+      ? `<span class="badge badge-green">Concluída</span>`
+      : `<span class="badge badge-yellow">Em aberto</span>`;
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${d.titulo}</td>
+        <td>${d.modalidade}</td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.curso}</td>
+        <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.disciplina}</td>
+        <td>${d.mo}</td>
+        <td>${d.ai}</td>
+        <td>${d.rol}</td>
+        <td>${fmtDate(d.criacao)}</td>
+        <td>${fmtDate(d.conclusao)}</td>
+        <td>${status}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── INIT
+window.addEventListener('DOMContentLoaded', () => {
+  buildChartMes();
+  buildChartModalidade();
+  buildTabelaClientes();
+  buildStatusBars();
+  buildChartROL();
+  buildChartCustom();
+  buildMOBars();
+  buildAIBars();
+  buildChartEvolucao();
+  buildChartInicio();
+  buildLeadTimeBars();
+  buildAbertos();
+  buildTabelaCompleta();
+});
+</script>
+</body>
+</html>
