@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migração Octadesk → Jira — DTI/FGV</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f6f2; --surface: #ffffff; --border: #e8e6e0; --border-strong: #d0cec8;
+    --text: #1a1916; --text-muted: #6b6860; --text-faint: #a09e9a;
+    --green: #1a7a52; --green-bg: #edf7f2; --green-border: #a8dcc4;
+    --amber: #92600a; --amber-bg: #fef9ee; --amber-border: #f0cc84;
+    --blue: #1a4fa0; --blue-bg: #eef3fc; --blue-border: #a8c0f0;
+    --purple: #5a3fa0; --purple-bg: #f2effe; --purple-border: #c4b4f0;
+    --red: #b03030; --red-bg: #fdf0f0; --red-border: #f0b4b4;
+    --gray-bg: #f2f0ec; --gray-border: #d8d6d0;
+    --font: 'DM Sans', system-ui, sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 8px; --radius-sm: 4px;
+    --drawer-width: 380px;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header { background: var(--text); color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
+  .header-sub { font-size: 12px; color: rgba(255,255,255,0.5); font-family: var(--mono); margin-top: 2px; }
+  .header-date { font-size: 12px; color: rgba(255,255,255,0.45); font-family: var(--mono); white-space: nowrap; }
+
+  /* ── STATUS + EXEC SUMMARY ── */
+  .top-section { background: var(--surface); border-bottom: 1px solid var(--border); padding: 22px 32px; display: flex; align-items: flex-start; gap: 24px; }
+
+  .semaforo { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 20px; border-radius: var(--radius); background: var(--amber-bg); border: 1px solid var(--amber-border); flex-shrink: 0; min-width: 130px; }
+  .semaforo-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px rgba(146,96,10,0.15); }
+  .semaforo-label { font-size: 12px; font-weight: 600; color: var(--amber); text-align: center; line-height: 1.4; }
+
+  .exec-block { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .exec-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); }
+  .exec-text { font-size: 13px; color: var(--text); line-height: 1.75; border-left: 3px solid var(--border-strong); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; outline: none; transition: border-color 0.15s, background 0.15s; background: var(--bg); }
+  .exec-text:hover { border-left-color: var(--blue); background: var(--blue-bg); }
+  .exec-text:focus { border-left-color: var(--blue); background: var(--blue-bg); }
+  .exec-edit-hint { font-size: 10px; color: var(--text-faint); font-style: italic; }
+
+  /* ── TOOLBAR ── */
+  .toolbar { padding: 12px 32px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+  .toolbar-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .toolbar-actions { margin-left: auto; display: flex; gap: 8px; }
+  .btn { padding: 6px 14px; border-radius: var(--radius-sm); font-size: 12px; font-family: var(--font); font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all 0.15s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn:hover { background: var(--bg); border-color: var(--border-strong); }
+  .btn-primary { background: var(--text); color: white; border-color: var(--text); }
+  .btn-primary:hover { background: #333; }
+  .btn-green { background: var(--green); color: white; border-color: var(--green); }
+  .btn-green:hover { background: #155f40; }
+
+  /* ── MAIN ── */
+  .main { padding: 32px; max-width: 820px; margin: 0 auto; transition: margin-right 0.3s ease; }
+  body.drawer-open .main { margin-right: var(--drawer-width); }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; }
+  .timeline::before { content: ''; position: absolute; left: 140px; top: 0; bottom: 0; width: 1.5px; background: var(--border); }
+
+  .tl-item { display: grid; grid-template-columns: 140px 1fr; margin-bottom: 4px; position: relative; }
+  .tl-left { padding: 14px 20px 14px 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+  .tl-date-edit { font-size: 12px; font-weight: 600; color: var(--text); font-family: var(--mono); white-space: nowrap; display: inline-block; min-width: 40px; }
+  .tl-actor-edit { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; display: inline-block; min-width: 30px; }
+
+  .tl-dot { position: absolute; left: 133px; top: 20px; width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--bg); z-index: 2; }
+  .tl-dot.sm { width: 10px; height: 10px; left: 135px; top: 18px; }
+  .tl-dot.green  { background: var(--green); }
+  .tl-dot.blue   { background: var(--blue); }
+  .tl-dot.purple { background: var(--purple); }
+  .tl-dot.amber  { background: var(--amber); }
+  .tl-dot.coral  { background: #c05030; }
+  .tl-dot.gray   { background: #888; }
+
+  .tl-right { padding: 10px 0 10px 24px; }
+
+  .tl-card { border-radius: var(--radius); padding: 12px 14px; border: 1px solid var(--border); background: var(--surface); transition: box-shadow 0.15s; position: relative; }
+  .tl-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .tl-card.green  { background: var(--green-bg);  border-color: var(--green-border); }
+  .tl-card.blue   { background: var(--blue-bg);   border-color: var(--blue-border); }
+  .tl-card.purple { background: var(--purple-bg); border-color: var(--purple-border); }
+  .tl-card.amber  { background: var(--amber-bg);  border-color: var(--amber-border); }
+  .tl-card.coral  { background: var(--red-bg);    border-color: var(--red-border); }
+  .tl-card.gray   { background: var(--gray-bg);   border-color: var(--gray-border); }
+  .tl-card.dashed { background: transparent; border-style: dashed; border-color: var(--border-strong); }
+
+  .tl-title-edit { font-size: 13px; font-weight: 600; line-height: 1.3; display: block; min-width: 60px; margin-bottom: 3px; }
+  .tl-title-edit.green  { color: var(--green); }
+  .tl-title-edit.blue   { color: var(--blue); }
+  .tl-title-edit.purple { color: var(--purple); }
+  .tl-title-edit.amber  { color: var(--amber); }
+  .tl-title-edit.coral  { color: var(--red); }
+  .tl-body-edit { font-size: 12px; color: var(--text-muted); line-height: 1.5; display: block; min-height: 14px; }
+
+  /* card action buttons */
+  .card-actions { display: none; position: absolute; top: 8px; right: 8px; gap: 4px; align-items: center; }
+  .tl-card:hover .card-actions { display: flex; }
+  .card-btn { background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 11px; font-weight: 500; cursor: pointer; padding: 2px 8px; color: var(--text-muted); line-height: 1.6; transition: all 0.12s; font-family: var(--font); }
+  .card-btn:hover { background: white; color: var(--text); border-color: var(--border-strong); }
+  .card-btn.danger:hover { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+  .card-btn.info:hover { color: var(--blue); border-color: var(--blue-border); background: var(--blue-bg); }
+
+  .edit-hint-inline { font-size: 10px; color: var(--text-faint); font-style: italic; margin-top: 5px; display: none; }
+  .tl-card:hover .edit-hint-inline { display: block; }
+
+  /* editable */
+  [contenteditable] { outline: none; border-radius: 3px; transition: background 0.12s; cursor: text; }
+  [contenteditable]:hover { background: rgba(0,0,0,0.035); }
+  [contenteditable]:focus { background: rgba(255,255,255,0.85); box-shadow: 0 0 0 2px rgba(26,79,160,0.25); padding: 1px 3px; margin: -1px -3px; }
+
+  /* dividers */
+  .tl-divider { display: grid; grid-template-columns: 140px 1fr; margin: 14px 0; }
+  .tl-divider-line { grid-column: 2; padding-left: 24px; display: flex; align-items: center; gap: 10px; }
+  .tl-divider-line::before, .tl-divider-line::after { content: ''; flex: 1; height: 1px; background: var(--border-strong); }
+  .tl-divider-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); white-space: nowrap; }
+
+  /* ── FINAL STATUS BLOCKS ── */
+  .final-blocks { display: grid; grid-template-columns: 140px 1fr; margin: 8px 0 24px; }
+  .final-blocks-inner { padding-left: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .block-card { border-radius: var(--radius); padding: 16px; border: 1px solid; }
+  .block-card.green { background: var(--green-bg); border-color: var(--green-border); }
+  .block-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
+  .block-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+  .block-card.green .block-card-title { color: var(--green); }
+  .block-card.amber .block-card-title { color: var(--amber); }
+  .block-item { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; line-height: 1.4; display: flex; gap: 7px; align-items: flex-start; }
+  .block-item span:first-child { flex-shrink: 0; margin-top: 1px; }
+
+  /* ── DRAWER ── */
+  .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2); z-index: 100; }
+  .drawer-overlay.open { display: block; }
+  .drawer { position: fixed; top: 0; right: 0; width: var(--drawer-width); height: 100vh; background: var(--surface); border-left: 1px solid var(--border); z-index: 101; transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; box-shadow: -4px 0 24px rgba(0,0,0,0.1); }
+  .drawer.open { transform: translateX(0); }
+  .drawer-header { padding: 16px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+  .drawer-header-info { display: flex; flex-direction: column; gap: 3px; }
+  .drawer-event-date { font-size: 11px; font-family: var(--mono); color: var(--text-faint); }
+  .drawer-event-title { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .drawer-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); padding: 0 4px; line-height: 1; flex-shrink: 0; }
+  .drawer-close:hover { color: var(--text); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .drawer-section-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-faint); margin-bottom: 6px; }
+  .drawer-tech-text { font-size: 13px; color: var(--text); line-height: 1.7; min-height: 180px; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); resize: vertical; background: var(--bg); outline: none; transition: border-color 0.15s; }
+  .drawer-tech-text:focus { border-color: var(--blue); background: var(--surface); }
+  .drawer-hint { font-size: 11px; color: var(--text-faint); font-style: italic; }
+  .drawer-footer { padding: 14px 18px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* ── ADD EVENT MODAL ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; width: 520px; max-width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.15); overflow: hidden; }
+  .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-header h3 { font-size: 15px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1; padding: 0 4px; }
+  .modal-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .form-row { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+  .form-control { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font); color: var(--text); background: var(--surface); outline: none; transition: border-color 0.15s; width: 100%; }
+  .form-control:focus { border-color: var(--blue); }
+  select.form-control { cursor: pointer; }
+  textarea.form-control { resize: vertical; min-height: 80px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── LEGEND + HINT ── */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 16px 32px; border-top: 1px solid var(--border); background: var(--surface); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .edit-hint-bar { font-size: 11px; color: var(--text-faint); font-style: italic; padding: 8px 32px; background: var(--bg); border-top: 1px solid var(--border); }
+
+  /* ── FLASH ── */
+  .save-flash { position: fixed; bottom: 24px; right: 24px; background: var(--green); color: white; padding: 10px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 400; pointer-events: none; }
+  .save-flash.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <div class="header-title">Migração Octadesk → Jira Service Management</div>
+    <div class="header-sub">DTI / FGV — Projeto SDCONC</div>
+  </div>
+  <div class="header-date" id="header-date"></div>
+</header>
+
+<!-- TOP: SEMAFORO + RESUMO EXECUTIVO -->
+<section class="top-section">
+  <div class="semaforo">
+    <div class="semaforo-dot"></div>
+    <div class="semaforo-label" contenteditable="true">Aguardando<br>validação final</div>
+  </div>
+  <div class="exec-block">
+    <div class="exec-section-label">Resumo executivo</div>
+    <div class="exec-text" contenteditable="true" id="exec-text">A migração do atendimento de concursos e exames da Octadesk para o Jira Service Management está tecnicamente concluída pela DTI. O portal está em produção, testado e com equipe habilitada. O processo teve início formal em setembro/2025, por determinação da DCI após reprovação da Octadesk em segurança da informação e LGPD. Após cinco meses de acompanhamento e alinhamentos com a área de negócio, o maior obstáculo — a transição do canal de e-mail para o portal único — foi superado em março/2026. O projeto aguarda apenas as validações finais e a definição da data de corte pela FGV Conhecimento para entrar em operação.</div>
+    <div class="exec-edit-hint">✏ Clique no texto para editar o resumo executivo</div>
+  </div>
+</section>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <span class="toolbar-label">Linha do tempo — do mais recente ao mais antigo</span>
+  <div class="toolbar-actions">
+    <button class="btn" onclick="openAddModal()">+ Adicionar evento</button>
+    <button class="btn btn-green" onclick="exportHTML()">⬇ Exportar HTML</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="main-content">
+<div class="timeline" id="timeline">
+
+  <!-- USER EVENTS (novos eventos aparecem aqui, no topo) -->
+  <div id="user-events"></div>
+
+  <!-- 20/MAR -->
+  <div class="tl-item" data-tech="Eudes entregou SISTEMA JIRA ATUALIZADO.xlsx com catálogo revisado. DTI analisou e identificou novidades em Inscrição (Voucher SUSEP, Impugnação de Edital, Heteroidentificação/Cotas, Taxa de Isenção), Pagamento (Nota Fiscal), Prova (Discursiva/Objetiva/Preambular/Aptidão Física, CCI Indisponível e Solicitação CCI), Resultado (Gabarito, renomeação de Interposição para Erro ao Interpor Recurso), Documentos (Erro upload, Análise de Títulos). Áreas novas: Suporte Operacional (7 chamados) e EAD (8 chamados). DTI propôs consolidação de Prova em 1 chamado e erros EAD em 1 chamado. Portal v7 publicado. Pendente: resposta do Vinícius sobre 2 pontos de consolidação.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">20/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI + Conhecimento</span>
+    </div>
+    <div class="tl-dot purple"></div>
+    <div class="tl-right"><div class="tl-card purple">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit purple" contenteditable="true">Catálogo revisado entregue — portal v7 publicado</span>
+      <span class="tl-body-edit" contenteditable="true">DTI analisa catálogo, mapeia novidades e propõe consolidações. Protótipo v7 enviado para validação final. Aguardando retorno da área.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 18/MAR -->
+  <div class="tl-item" data-tech="Reunião de 1h30min via Teams em 18/03/2026. Participantes: Eudes, Vinícius, Bruno Fernandes Luis, Luiz Henrique e equipe DTI. Portal Jira em produção (jira.tic.fgv.br/portal/242) demonstrado — Eudes havia tentado acessar pela URL do GitHub Pages. Bruno Fernandes criou painel [GI-DTI] FGV Exames e Concursos. DTI confirmou importação de chamados em lote. Reunião gravada no OneDrive do Eudes.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">18/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI + Conhecimento</span>
+    </div>
+    <div class="tl-dot purple"></div>
+    <div class="tl-right"><div class="tl-card purple">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit purple" contenteditable="true">Reunião de validação — Jira em produção demonstrado</span>
+      <span class="tl-body-edit" contenteditable="true">Portal demonstrado ao time. Painel de gestão criado pela DTI. Área comprometida com entrega de revisão do catálogo.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 16/MAR -->
+  <div class="tl-item" data-tech="DTI identificou na base Octadesk que chamados de Ouvidoria em 2025 totalizaram 2.031 tickets: ouvidoriaconcurso@fgv.br (1.899) e ouvidoria.pr@fgv.br (125). Proposta: canal restrito no portal — visível apenas a grupo no AD vinculado às caixas institucionais. DTI enviou resumo formal das 10 entregas concluídas e lista de 8 pendências da Conhecimento.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">16/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot blue sm"></div>
+    <div class="tl-right"><div class="tl-card blue">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit blue" contenteditable="true">DTI formaliza resumo de entregas e pendências</span>
+      <span class="tl-body-edit" contenteditable="true">10 entregas concluídas documentadas. 8 pendências da Conhecimento listadas. Ouvidoria: 2.031 chamados mapeados em 2025.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 13/MAR -->
+  <div class="tl-item" data-tech="DTI enviou prints dos fluxos de atendimento e motor de status. O motor funciona independentemente de categorização, grupo ou exame. Filas configuradas por grupo — cada grupo vê apenas seus chamados. Eudes confirmou o modelo de Ouvidoria: canal interno que recebe demandas das ouvidorias da FGV, não visível ao candidato.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">13/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot green sm"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">Fluxos, motor de status e filas apresentados em produção</span>
+      <span class="tl-body-edit" contenteditable="true">Área confirma modelo de Ouvidoria — restrito a usuários internos, não visível ao candidato.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 12/MAR -->
+  <div class="tl-item" data-tech="DTI consultou documentação oficial do Jira DC e confirmou limitação: campo único de exames sem filtro por tipo de chamado dentro do mesmo projeto. Solução: distinção feita pelo atributo de tipo de chamado e CMDB. DTI solicitou 4 informações sobre Ouvidoria para configuração correta.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">12/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot blue sm"></div>
+    <div class="tl-right"><div class="tl-card blue">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit blue" contenteditable="true">Solução técnica da Ouvidoria definida</span>
+      <span class="tl-body-edit" contenteditable="true">Limitação do Jira DC confirmada: campo único para todos os chamados. Distinção feita por tipo de solicitante e CMDB.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 11/MAR -->
+  <div class="tl-item" data-tech="DTI enviou lista de 21 sistemas e fluxos: Plataforma Concursos, SUSEP, EADs, App Colaboradores, Portal Informe de Rendimentos, Sistema de Recursos, Plataformas ENARE, OBP, Vestibular, Correções, Portal CFC, Safe-Exam Browser e outros. Eudes confirmou. DTI definiu 4 ações de validação: concursos ativos, sistemas, categorias, acessos. Eudes levantou complexidade da Ouvidoria: concursos antigos judicializados numa central separada.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">11/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI + Conhecimento</span>
+    </div>
+    <div class="tl-dot green sm"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">DTI entrega lista de 21 sistemas — discussão de Ouvidoria</span>
+      <span class="tl-body-edit" contenteditable="true">Área confirma lista de plataformas. Complexidade do canal de Ouvidoria identificada e encaminhada.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 10/MAR -->
+  <div class="tl-item" data-tech="Reunião iniciada às 16h via Teams. Participantes: Eudes, Vinícius, Jackson de Jesus dos Santos, Luiz Henrique (DTI). DTI compartilhou base_concursos.csv com todos os concursos pré-cadastrados para validação da área.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">10/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot green sm"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">Reunião operacional — validação da base de concursos</span>
+      <span class="tl-body-edit" contenteditable="true">DTI compartilha base de concursos ativos para validação da área.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="tl-divider">
+    <div></div>
+    <div class="tl-divider-line"><span class="tl-divider-label">Sprint de validação — 10 a 20/mar</span></div>
+  </div>
+
+  <!-- 9/MAR -->
+  <div class="tl-item" data-tech="Canal de chat representa apenas 2% do volume total — 2.713 de 135.734 chamados em 2025. Concentrado em jul/2025 (579, pico CPNU e SUSEP), fev/2025 (525) e dez/2025 (336). O ENARE gera quase zero chamados via Chat (1 registro) — usa o widget Octadesk (2.632 chamados), que desaparece fora dos períodos de aplicação. Os pontos levantados em 9/mar (e-mail, WhatsApp, GMUD) haviam sido discutidos na reunião de 13/fev com ações formais para a área. O canal de e-mail havia sido encerrado por Bruno Bocci em 5/mar.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">9/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">Controladoria</span>
+    </div>
+    <div class="tl-dot amber"></div>
+    <div class="tl-right"><div class="tl-card amber">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit amber" contenteditable="true">Controladoria define prazo limite: 12/mar</span>
+      <span class="tl-body-edit" contenteditable="true">Encerramento da Octadesk estabelecido. Novos pontos operacionais levantados pela área para alinhamento.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="tl-divider">
+    <div></div>
+    <div class="tl-divider-line"><span class="tl-divider-label">Portal pronto — bola na área de negócio</span></div>
+  </div>
+
+  <!-- 5/MAR -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">5/mar</span>
+      <span class="tl-actor-edit" contenteditable="true">Conhecimento</span>
+    </div>
+    <div class="tl-dot green"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">Portal validado — canal único encaminhado</span>
+      <span class="tl-body-edit" contenteditable="true">Conhecimento valida modelo do portal. Questão do e-mail formalmente encerrada. Encaminhamento direto da ação acordada em 13/fev.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 24/FEV -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">24/fev</span>
+      <span class="tl-actor-edit" contenteditable="true">Conhecimento</span>
+    </div>
+    <div class="tl-dot gray sm"></div>
+    <div class="tl-right"><div class="tl-card gray">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit" contenteditable="true">Discussão sobre canal de abertura de chamados</span>
+      <span class="tl-body-edit" contenteditable="true">Alinhamento em curso sobre modelo de transição. Questão escalada internamente pela área.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- 13/FEV -->
+  <div class="tl-item" data-tech="Reunião de 1h12min via Teams em 13/02/2026. Participantes: Luiz Henrique (DTI), Eudes Jácome, Vinícius Nogueira de Macedo, Felipe Vinhas e outros. Cinco tarefas formais distribuídas ao Eudes: (1) agendar reunião com Juliana Borello e Carlos Augusto sobre eliminação das caixas de e-mail; (2) verificar exigência jurídica que obrigue caixa por concurso; (3) escalar internamente urgência da migração; (4) revisar planilha de categorias e fluxos; (5) confirmar disponibilidade do Bruno para próxima reunião. Maior risco do projeto nomeado: cultural e decisório, não técnico.">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">13/fev</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI + Conhecimento</span>
+    </div>
+    <div class="tl-dot purple"></div>
+    <div class="tl-right"><div class="tl-card purple">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit purple" contenteditable="true">Reunião de alinhamento — gargalo nomeado</span>
+      <span class="tl-body-edit" contenteditable="true">DTI apresenta portal. Prazo de março alertado formalmente. Maior risco: cultural e decisório, não técnico. Cinco ações formais distribuídas para a área.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- JAN/2026 -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Jan/2026</span>
+      <span class="tl-actor-edit" contenteditable="true">Conhecimento</span>
+    </div>
+    <div class="tl-dot green"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">Catálogo preliminar recebido</span>
+      <span class="tl-body-edit" contenteditable="true">Primeira entrega de conteúdo pela área. DTI inicia análise.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- DEZ/2025 -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Dez/2025</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot blue sm"></div>
+    <div class="tl-right"><div class="tl-card blue">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit blue" contenteditable="true">Acompanhamento — catálogo ainda em elaboração</span>
+      <span class="tl-body-edit" contenteditable="true">DTI registra dependência de definições operacionais da área. Decisão sobre canal de e-mail sinalizada como ponto a escalar internamente.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- NOV/2025 -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Nov/2025</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot blue sm"></div>
+    <div class="tl-right"><div class="tl-card blue">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit blue" contenteditable="true">Acompanhamento — catálogo não entregue</span>
+      <span class="tl-body-edit" contenteditable="true">DTI reforça necessidade de avanço. Prazo em aberto. Sem retorno efetivo da área.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- OUT/2025 -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Out/2025</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot blue"></div>
+    <div class="tl-right"><div class="tl-card blue">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit blue" contenteditable="true">DTI inicia acompanhamento formal</span>
+      <span class="tl-body-edit" contenteditable="true">Primeiro contato com a área. Aguardando catálogo e definições operacionais da Conhecimento.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- SET/2025 -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Set/2025</span>
+      <span class="tl-actor-edit" contenteditable="true">DCI</span>
+    </div>
+    <div class="tl-dot coral"></div>
+    <div class="tl-right"><div class="tl-card coral">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit coral" contenteditable="true">DCI determina encerramento da Octadesk</span>
+      <span class="tl-body-edit" contenteditable="true">Avaliação de segurança reprovada (nota D pelo ESI). Baixa maturidade LGPD. DTI indicada como solução substituta.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- ANTERIOR -->
+  <div class="tl-item" data-tech="">
+    <div class="tl-left">
+      <span class="tl-date-edit" contenteditable="true">Anterior</span>
+      <span class="tl-actor-edit" contenteditable="true">DTI</span>
+    </div>
+    <div class="tl-dot green"></div>
+    <div class="tl-right"><div class="tl-card green">
+      <div class="card-actions">
+        <button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>
+        <button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>
+      </div>
+      <span class="tl-title-edit green" contenteditable="true">Jira Service Management já operacional</span>
+      <span class="tl-body-edit" contenteditable="true">Arquitetura, filas e portal definidos antes do processo formal de migração.</span>
+      <div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>
+    </div></div>
+  </div>
+
+  <!-- DIVIDER FINAL -->
+  <div class="tl-divider" style="margin-top:20px;">
+    <div></div>
+    <div class="tl-divider-line"><span class="tl-divider-label">Status consolidado</span></div>
+  </div>
+
+  <!-- FINAL BLOCKS -->
+  <div class="final-blocks">
+    <div></div>
+    <div class="final-blocks-inner">
+      <div class="block-card green">
+        <div class="block-card-title">DTI — entregas concluídas</div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Análise de 135.734 chamados da Octadesk</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Portal em produção no Jira (SDCONC)</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Categorias, formulários e tooltips implementados</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Lista base de concursos ativos configurada</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Fluxos, motor de status e filas implementados</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Notificações automáticas ao candidato ativas</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">~40 agentes habilitados no ambiente</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Ouvidoria mapeada e configurada</span></div>
+        <div class="block-item"><span>✓</span><span contenteditable="true">Treinamento preparado e pronto para execução</span></div>
+      </div>
+      <div class="block-card amber">
+        <div class="block-card-title">Conhecimento — pendências go-live</div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Validar conteúdo do portal</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Validar carga de concursos ativos</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Validar notificações por e-mail ao candidato</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Validar fluxos de atendimento e motor de status</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Confirmar grupos de solução e agentes</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Confirmar responsáveis pelo canal de Ouvidoria</span></div>
+        <div class="block-item"><span>◯</span><span contenteditable="true">Definir data de corte da Octadesk</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#1a7a52"></div>Entrega / avanço DTI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1a4fa0"></div>Acompanhamento DTI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#5a3fa0"></div>Reunião-chave</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#92600a"></div>Marco externo / prazo</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c05030"></div>Determinação institucional</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#888"></div>Alinhamento em curso</div>
+</div>
+<div class="edit-hint-bar">✏ Passe o mouse sobre qualquer card para editar campos ou abrir o painel técnico lateral. Novos eventos adicionados aparecem no topo da timeline.</div>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-header-info">
+      <div class="drawer-event-date" id="drawer-date"></div>
+      <div class="drawer-event-title" id="drawer-title"></div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">×</button>
+  </div>
+  <div class="drawer-body">
+    <div>
+      <div class="drawer-section-label">Detalhes técnicos</div>
+      <textarea class="drawer-tech-text" id="drawer-tech" placeholder="Adicione informações técnicas, participantes, links de reuniões, decisões de arquitetura ou qualquer detalhe que ficaria poluído na timeline principal…"></textarea>
+      <div class="drawer-hint" style="margin-top:8px;">Este campo é salvo no HTML ao exportar.</div>
+    </div>
+  </div>
+  <div class="drawer-footer">
+    <button class="btn btn-primary" onclick="saveDrawer()">Salvar detalhes</button>
+    <button class="btn" onclick="closeDrawer()">Fechar</button>
+  </div>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Adicionar novo evento</h3>
+      <button class="modal-close" onclick="closeAddModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="form-label">Data / período</label>
+        <input type="text" class="form-control" id="ev-date" placeholder="Ex.: 25/mar, Abr/2026…">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Responsável / área</label>
+        <input type="text" class="form-control" id="ev-actor" value="DTI">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Título do evento</label>
+        <input type="text" class="form-control" id="ev-title" placeholder="Resumo em uma linha…">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-control" id="ev-body" placeholder="Contexto, decisões, encaminhamentos…"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Detalhes técnicos (painel lateral)</label>
+        <textarea class="form-control" id="ev-tech" placeholder="Participantes, links, decisões técnicas…"></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Tipo / cor</label>
+        <select class="form-control" id="ev-type">
+          <option value="green">Verde — entrega / avanço</option>
+          <option value="blue">Azul — acompanhamento DTI</option>
+          <option value="purple">Roxo — reunião-chave</option>
+          <option value="amber">Âmbar — marco externo / prazo</option>
+          <option value="coral">Vermelho — determinação institucional</option>
+          <option value="gray">Cinza — alinhamento em curso</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="addEvent()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-flash" id="save-flash">✓ HTML exportado com sucesso</div>
+
+<script>
+document.getElementById('header-date').textContent = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+var currentDrawerItem = null;
+
+function openDrawer(btn) {
+  var item = btn.closest('.tl-item');
+  currentDrawerItem = item;
+  var date  = (item.querySelector('.tl-date-edit')  || {}).textContent || '';
+  var title = (item.querySelector('.tl-title-edit') || {}).textContent || '';
+  document.getElementById('drawer-date').textContent  = date.trim();
+  document.getElementById('drawer-title').textContent = title.trim();
+  document.getElementById('drawer-tech').value = item.getAttribute('data-tech') || '';
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('open');
+  document.body.classList.add('drawer-open');
+  setTimeout(function(){ document.getElementById('drawer-tech').focus(); }, 300);
+}
+
+function saveDrawer() {
+  if (!currentDrawerItem) return;
+  currentDrawerItem.setAttribute('data-tech', document.getElementById('drawer-tech').value);
+  closeDrawer();
+  flash('✓ Detalhes técnicos salvos');
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('open');
+  document.body.classList.remove('drawer-open');
+  currentDrawerItem = null;
+}
+
+function deleteItem(btn) {
+  if (!confirm('Remover este evento da linha do tempo?')) return;
+  btn.closest('.tl-item').remove();
+}
+
+function openAddModal() {
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){ document.getElementById('ev-date').focus(); }, 50);
+}
+function closeAddModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  ['ev-date','ev-title','ev-body','ev-tech'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('ev-actor').value = 'DTI';
+}
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeAddModal(); }
+
+function addEvent() {
+  var date  = document.getElementById('ev-date').value.trim();
+  var actor = document.getElementById('ev-actor').value.trim();
+  var title = document.getElementById('ev-title').value.trim();
+  var body  = document.getElementById('ev-body').value.trim();
+  var tech  = document.getElementById('ev-tech').value.trim();
+  var type  = document.getElementById('ev-type').value;
+  if (!date || !title) { alert('Preencha pelo menos a data e o título.'); return; }
+  var item = document.createElement('div');
+  item.className = 'tl-item';
+  item.setAttribute('data-tech', tech);
+  item.innerHTML =
+    '<div class="tl-left">' +
+      '<span class="tl-date-edit" contenteditable="true">'+esc(date)+'</span>' +
+      '<span class="tl-actor-edit" contenteditable="true">'+esc(actor)+'</span>' +
+    '</div>' +
+    '<div class="tl-dot '+type+'"></div>' +
+    '<div class="tl-right"><div class="tl-card '+type+'">' +
+      '<div class="card-actions">' +
+        '<button class="card-btn info" onclick="openDrawer(this)">ⓘ Técnico</button>' +
+        '<button class="card-btn danger" onclick="deleteItem(this)">× Remover</button>' +
+      '</div>' +
+      '<span class="tl-title-edit '+type+'" contenteditable="true">'+esc(title)+'</span>' +
+      '<span class="tl-body-edit" contenteditable="true">'+esc(body)+'</span>' +
+      '<div class="edit-hint-inline">✏ Clique em qualquer campo para editar</div>' +
+    '</div></div>';
+  // Insert at top of timeline, before first tl-item
+  var tl = document.getElementById('user-events');
+  tl.insertBefore(item, tl.firstChild);
+  closeAddModal();
+}
+
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function exportHTML() {
+  var clone = document.documentElement.cloneNode(true);
+  clone.querySelector('#modal-overlay').classList.remove('open');
+  clone.querySelector('#drawer').classList.remove('open');
+  clone.querySelector('#drawer-overlay').classList.remove('open');
+  clone.querySelector('body').classList.remove('drawer-open');
+  var sf = clone.querySelector('#save-flash');
+  if (sf) sf.classList.remove('show');
+  var html = '<!DOCTYPE html>\n' + clone.outerHTML;
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'timeline-migracao-octadesk-jira.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  flash('✓ HTML exportado com sucesso');
+}
+
+function flash(msg) {
+  var el = document.getElementById('save-flash');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 2500);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeAddModal(); closeDrawer(); }
+});
+</script>
+</body>
+</html>
