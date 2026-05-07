@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSM License Dashboard — FGV DTI</title>
+<style>
+/* Fontes do sistema — sem dependências externas */
+:root{
+  --bg:#F5F2EC;--surface:#FFF;--surface2:#EDEAE3;--border:rgba(0,0,0,.09);
+  --text:#1A1917;--text2:#6B6860;--text3:#B0ADA6;
+  --accent:#B85540;
+  --never:#C0392B;--never-bg:#FDF1EF;--never-mid:#E05040;
+  --d7:#1D8A5E;--d7-bg:#EDFBF3;--d7-mid:#1D9E75;
+  --d30:#2563A8;--d30-bg:#EEF4FC;--d30-mid:#378ADD;
+  --d90:#9B6D15;--d90-bg:#FDF6E8;--d90-mid:#BA7517;
+  --d180:#6B5CC4;--d180-bg:#F3F1FD;--d180-mid:#7F77DD;
+  --old:#555250;--old-bg:#F0EEE8;--old-mid:#888780;
+  --ok:#1D8A5E;--warn:#9B6D15;--danger:#C0392B;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── IMPORT ── */
+#screen-import.active{display:flex;flex-direction:column;align-items:center;padding:48px 20px}
+.import-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px 40px;max-width:740px;width:100%}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:28px}
+.brand-dot{width:24px;height:24px;background:var(--accent);border-radius:7px}
+.brand span{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+.import-card h1{font-size:23px;font-weight:600;margin-bottom:6px}
+.import-card .sub{font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.65}
+.howto{background:var(--bg);border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:var(--text2);line-height:1.8}
+.howto strong{color:var(--text)}
+.howto code{font-family:'Consolas','Menlo','Monaco',monospace;font-size:11px;background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px}
+.license-input-row{display:flex;align-items:center;gap:10px;margin-bottom:16px;background:var(--bg);border-radius:10px;padding:14px 18px}
+.license-input-row label{font-size:13px;font-weight:500;white-space:nowrap}
+.license-input-row input{width:100px;font-family:'Consolas','Menlo','Monaco',monospace;font-size:16px;font-weight:500;border:1px solid var(--border);border-radius:8px;padding:6px 12px;background:var(--surface);color:var(--text);text-align:center;outline:none;transition:border-color .2s}
+.license-input-row input:focus{border-color:var(--accent)}
+.license-input-row .hint{font-size:12px;color:var(--text3)}
+textarea{width:100%;height:240px;font-family:'Consolas','Menlo','Monaco',monospace;font-size:11px;border:1px solid var(--border);border-radius:10px;padding:14px;resize:vertical;background:var(--surface);color:var(--text);line-height:1.6;outline:none;transition:border-color .2s}
+textarea:focus{border-color:var(--accent)}
+.import-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px;flex-wrap:wrap}
+.import-status{font-size:12px;color:var(--text2)}
+.import-status.ok{color:var(--d7)}
+.import-status.err{color:var(--never)}
+.btn{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:14px;font-weight:500;padding:10px 26px;border-radius:8px;cursor:pointer;transition:opacity .15s,transform .1s;border:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);font-weight:400}
+.btn-ghost:hover{background:var(--surface2)}
+.sample-link{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ── DASHBOARD ── */
+#screen-dashboard.active{display:block}
+.dash-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.dash-logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text2)}
+.dash-logo-dot{width:18px;height:18px;background:var(--accent);border-radius:5px}
+.dash-actions{display:flex;gap:8px;align-items:center}
+.dbtn{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:background .15s}
+.dbtn:hover{background:var(--surface2)}
+.dbtn.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dbtn.accent:hover{opacity:.88}
+.dash-body{padding:24px 28px 60px;max-width:1100px}
+
+/* ── GAUGE ── */
+.gauge-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 32px;margin-bottom:20px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+@media(max-width:600px){.gauge-section{grid-template-columns:1fr;gap:20px}}
+.gauge-wrap{position:relative;width:180px;height:100px;flex-shrink:0}
+.gauge-wrap svg{width:180px;height:100px;overflow:visible}
+.gauge-info{display:flex;flex-direction:column;gap:16px}
+.gauge-title{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.gauge-pct{font-size:52px;font-weight:600;line-height:1;transition:color .4s}
+.gauge-pct span{font-size:22px;font-weight:400;color:var(--text2)}
+.license-edit-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.license-edit-row label{font-size:13px;color:var(--text2)}
+.license-edit-row input{width:80px;font-family:'Consolas','Menlo','Monaco',monospace;font-size:14px;font-weight:500;border:1px solid var(--border);border-radius:6px;padding:4px 10px;background:var(--bg);color:var(--text);text-align:center;outline:none;transition:border-color .2s}
+.license-edit-row input:focus{border-color:var(--accent)}
+.license-edit-row .sep{color:var(--text3);font-size:13px}
+.stats-row{display:flex;gap:24px;flex-wrap:wrap}
+.stat-item{display:flex;flex-direction:column;gap:2px}
+.stat-label{font-size:11px;color:var(--text3)}
+.stat-val{font-size:18px;font-weight:600}
+.stat-val.good{color:var(--ok)}
+.stat-val.warn{color:var(--warn)}
+.stat-val.bad{color:var(--danger)}
+.occ-bar-wrap{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:6px}
+.occ-bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1),background .4s}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:7px;margin-bottom:18px}
+.mcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.mcard.total{border-color:rgba(0,0,0,.15)}
+.mlabel{font-size:10px;color:var(--text2);margin-bottom:3px;line-height:1.4}
+.mnum{font-size:26px;font-weight:600;line-height:1}
+
+/* ── FILTER ── */
+.filter-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.fbtn{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.fbtn:hover{background:var(--surface2)}
+.fbtn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* ── GROUP CARDS ── */
+.gcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:7px;overflow:hidden}
+.gheader{display:flex;align-items:center;gap:11px;padding:13px 18px;cursor:pointer;user-select:none;transition:background .12s}
+.gheader:hover{background:var(--surface2)}
+.gicon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.gtitle{font-size:13px;font-weight:500;flex:1}
+.gbadge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;flex-shrink:0}
+.gpct{font-size:12px;color:var(--text3);width:36px;text-align:right;flex-shrink:0}
+.gchev{font-size:13px;color:var(--text3);transition:transform .2s;flex-shrink:0;margin-left:4px}
+.gchev.open{transform:rotate(180deg)}
+.gbar-wrap{height:3px;background:var(--surface2)}
+.gbar-fill{height:100%;transition:width .4s ease}
+.gbody{border-top:1px solid var(--border);display:none}
+
+/* ── USER ROW ── */
+.urow{display:grid;grid-template-columns:26px 1fr auto auto auto;align-items:start;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(0,0,0,.04);transition:background .1s}
+.urow:last-child{border-bottom:none}
+.urow:hover{background:var(--surface2)}
+
+.uavatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;margin-top:1px}
+
+.ucol-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.uname{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ulogin{font-family:'Consolas','Menlo','Monaco',monospace;font-size:10px;color:var(--text3)}
+
+.ucol-groups{display:flex;flex-wrap:wrap;gap:3px;align-items:flex-start;max-width:420px}
+.gtag{font-size:10px;font-family:'Consolas','Menlo','Monaco',monospace;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:5px;padding:2px 6px;white-space:nowrap;line-height:1.4}
+.gtag-empty{font-size:10px;color:var(--text3);font-style:italic;padding-top:3px}
+
+.ucol-ext{display:flex;align-items:flex-start;padding-top:2px}
+.ext-tag{font-size:10px;padding:1px 6px;border-radius:8px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);white-space:nowrap}
+
+/* ucol-time and udays now defined in tabs section above */
+
+/* cabeçalho das colunas */
+.urow-header{display:grid;grid-template-columns:26px 1fr auto auto auto;gap:10px;padding:6px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
+.urow-header span{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.urow-header .col-groups{max-width:420px}
+
+.empty-row{padding:10px 18px;font-size:12px;color:var(--text3);font-style:italic}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:22px}
+.tab{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;font-weight:500;padding:10px 20px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── USER ROW — colunas separadas dias/acesso ── */
+/* urow and urow-header now defined in checkbox section */
+.ucol-days{text-align:right;padding-top:2px;min-width:52px}
+.udays{font-size:12px;font-weight:600;font-family:'Consolas','Menlo','Monaco',monospace;white-space:nowrap}
+.ucol-time{text-align:right;padding-top:2px;min-width:120px}
+.utime{font-size:10px;color:var(--text2);font-family:'Consolas','Menlo','Monaco',monospace;white-space:nowrap}
+
+/* ── BY-GROUP VIEW ── */
+.bygroup-filter{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.bg-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.bg-thead{display:grid;grid-template-columns:1fr repeat(7,64px);gap:0;padding:8px 18px;background:var(--bg);border-bottom:1px solid var(--border)}
+.bg-thead span{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;text-align:right}
+.bg-thead span:first-child{text-align:left}
+.bg-row{display:grid;grid-template-columns:1fr repeat(7,64px);gap:0;padding:9px 18px;border-bottom:1px solid rgba(0,0,0,.04);align-items:center;transition:background .1s;cursor:pointer}
+.bg-row:last-child{border-bottom:none}
+.bg-row:hover{background:var(--surface2)}
+.bg-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bg-cell{font-size:12px;font-family:'Consolas','Menlo','Monaco',monospace;text-align:right;font-weight:500}
+.bg-cell.zero{color:var(--text3);font-weight:400}
+.bg-bar-col{grid-column:1/-1;padding:0 18px 8px}
+.bg-bar-outer{height:3px;background:var(--surface2);border-radius:2px;margin-top:4px}
+.bg-bar-inner{height:100%;border-radius:2px;background:var(--accent);opacity:.6}
+.bg-sort-btn{cursor:pointer;user-select:none}
+.bg-sort-btn:hover{color:var(--text)}
+.bg-sort-active{color:var(--accent) !important}
+.bg-summary{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.bg-sum-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px}
+.bg-sum-label{color:var(--text2);margin-bottom:2px}
+.bg-sum-val{font-size:18px;font-weight:600;font-family:'Consolas','Menlo','Monaco',monospace}
+
+/* ── CHECKBOX ── */
+.urow{display:grid;grid-template-columns:18px 26px 1fr auto auto auto auto;align-items:start;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(0,0,0,.04);transition:background .1s}
+.urow:last-child{border-bottom:none}
+.urow:hover{background:var(--surface2)}
+.urow.selected{background:#FFF8F6}
+.urow-header{display:grid;grid-template-columns:18px 26px 1fr auto auto auto auto;gap:10px;padding:6px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
+.ucheck{width:15px;height:15px;margin-top:3px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.ucheck-all{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+
+/* ── REMOVAL TAB ── */
+.removal-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.removal-empty .big{font-size:32px;margin-bottom:10px}
+.removal-empty p{font-size:13px}
+.removal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.removal-header h2{font-size:16px;font-weight:600}
+.removal-actions{display:flex;gap:8px}
+.removal-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.removal-row{display:grid;grid-template-columns:26px 1fr auto auto auto;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(0,0,0,.04);align-items:start;transition:background .1s}
+.removal-row:last-child{border-bottom:none}
+.removal-row:hover{background:var(--surface2)}
+.removal-row-header{display:grid;grid-template-columns:26px 1fr auto auto auto;gap:10px;padding:6px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
+.removal-row-header span{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.removal-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--never-bg);color:var(--never);border-radius:12px;font-size:12px;font-weight:600;padding:2px 10px;margin-left:8px}
+.btn-remove-all{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--never);cursor:pointer;transition:background .15s}
+.btn-remove-all:hover{background:var(--never-bg)}
+.uncheck-btn{width:16px;height:16px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text2);flex-shrink:0;transition:background .15s;margin-top:2px;padding:0;font-family:monospace}
+.uncheck-btn:hover{background:var(--never-bg);color:var(--never);border-color:var(--never)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--never);color:#fff;border-radius:10px;font-size:10px;font-weight:600;padding:1px 7px;margin-left:5px;vertical-align:middle;min-width:18px}
+</style>
+</head>
+<body>
+
+<!-- IMPORT -->
+<div id="screen-import" class="screen active">
+  <div class="import-card">
+    <div class="brand"><div class="brand-dot"></div><span>JSM License Dashboard · FGV DTI</span></div>
+    <h1>Importar dados de usuários</h1>
+    <p class="sub">Cole o conteúdo copiado da tela de <strong>Gerenciamento de Usuários</strong> do Jira Admin. Tudo processado localmente — nenhum dado sai do browser.</p>
+    <div class="license-input-row">
+      <label>Total de licenças contratadas:</label>
+      <input type="number" id="total-licenses-import" value="500" min="1" max="99999">
+      <span class="hint">Pode alterar a qualquer momento no painel</span>
+    </div>
+    <div class="howto">
+      <strong>Como copiar do Jira:</strong> Jira Admin → Gerenciamento de Usuários → selecione tudo (Ctrl+A) → Ctrl+C → cole aqui.<br>
+      O parser detecta nomes, logins, emails, datas de último acesso e grupos <code>ACS-*-ATENDIMENTO_JSD</code> automaticamente.
+    </div>
+    <textarea id="raw-input" placeholder="Cole aqui o texto da página de usuários do Jira Admin..."></textarea>
+    <div class="import-footer">
+      <div>
+        <div class="import-status" id="parse-status"></div>
+        <span class="sample-link" onclick="loadSample()">↳ carregar dados de exemplo</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="document.getElementById('raw-input').value='';setStatus('','')">Limpar</button>
+        <button class="btn btn-primary" onclick="parseAndShow()">Gerar painel →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="dash-header">
+    <div class="dash-logo"><div class="dash-logo-dot"></div><span>JSM License Dashboard · FGV DTI</span></div>
+    <div class="dash-actions">
+      <span id="header-date" style="font-size:11px;color:var(--text3);font-family:'Consolas','Menlo','Monaco',monospace;margin-right:4px"></span>
+      <button class="dbtn" onclick="goImport()">← Reimportar</button>
+      <button class="dbtn accent" onclick="exportCSV()">Exportar CSV</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('overview',this)">Visão geral</button>
+      <button class="tab" onclick="switchTab('bygroup',this)">Por grupo de acesso</button>
+      <button class="tab" onclick="switchTab('removal',this)" id="tab-btn-removal">Selecionados para remoção<span class="tab-badge" id="removal-count-badge" style="display:none">0</span></button>
+    </div>
+
+    <!-- TAB: OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+
+    <!-- GAUGE -->
+    <div class="gauge-section">
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 180 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14,94 A76,76 0 0,1 166,94" fill="none" stroke="#E8E5DE" stroke-width="14" stroke-linecap="round"/>
+          <path id="gauge-arc" d="M14,94 A76,76 0 0,1 166,94" fill="none" stroke="#1D9E75" stroke-width="14" stroke-linecap="round"
+            stroke-dasharray="239" stroke-dashoffset="239" style="transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .4s"/>
+          <line id="gauge-needle" x1="90" y1="94" x2="90" y2="24"
+            stroke="#1A1917" stroke-width="2.5" stroke-linecap="round"
+            style="transform-origin:90px 94px;transform:rotate(-90deg);transition:transform .8s cubic-bezier(.4,0,.2,1)"/>
+          <circle cx="90" cy="94" r="5" fill="#1A1917"/>
+        </svg>
+      </div>
+      <div class="gauge-info">
+        <div>
+          <div class="gauge-title">Taxa de ocupação</div>
+          <div class="gauge-pct" id="gauge-pct-text">—<span>%</span></div>
+        </div>
+        <div class="license-edit-row">
+          <label>Total de licenças:</label>
+          <input type="number" id="total-licenses-dash" value="500" min="1" max="99999" onchange="updateGauge()">
+          <span class="sep">·</span>
+          <span id="used-label" style="font-size:13px;color:var(--text2)"></span>
+        </div>
+        <div class="occ-bar-wrap">
+          <div class="occ-bar-fill" id="occ-bar" style="width:0%"></div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item"><span class="stat-label">Disponíveis</span><span class="stat-val" id="stat-available">—</span></div>
+          <div class="stat-item"><span class="stat-label">Em uso</span><span class="stat-val" id="stat-used">—</span></div>
+          <div class="stat-item"><span class="stat-label">Nunca logaram</span><span class="stat-val bad" id="stat-never">—</span></div>
+          <div class="stat-item"><span class="stat-label">Potencial recuperável</span><span class="stat-val warn" id="stat-recoverable">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics" id="metrics"></div>
+
+    <!-- FILTER -->
+    <div class="filter-bar">
+      <button class="fbtn active" onclick="setFilter('all',this)">Todos</button>
+      <button class="fbtn" onclick="setFilter('ext',this)">Apenas externos</button>
+      <button class="fbtn" onclick="setFilter('int',this)">Apenas internos</button>
+    </div>
+
+    <!-- GROUPS -->
+    <div id="groups-container"></div>
+
+    </div><!-- /tab-overview -->
+
+    <!-- TAB: BY GROUP -->
+    <div class="tab-panel" id="tab-bygroup">
+      <div class="bg-summary" id="bg-summary"></div>
+      <div class="bygroup-filter" id="bg-filter-bar">
+        <button class="fbtn active" onclick="setBgFilter('all',this)">Todos</button>
+        <button class="fbtn" onclick="setBgFilter('ext',this)">Apenas externos</button>
+        <button class="fbtn" onclick="setBgFilter('int',this)">Apenas internos</button>
+      </div>
+      <div class="bg-table">
+        <div class="bg-thead">
+          <span class="bg-sort-btn" onclick="bgSort('name')">Grupo de acesso</span>
+          <span class="bg-sort-btn" onclick="bgSort('total')" id="bgs-total">Total</span>
+          <span class="bg-sort-btn" onclick="bgSort('never')" id="bgs-never" style="color:var(--never)">Nunca</span>
+          <span class="bg-sort-btn" onclick="bgSort('d7')" id="bgs-d7" style="color:var(--d7)">≤7d</span>
+          <span class="bg-sort-btn" onclick="bgSort('d30')" id="bgs-d30" style="color:var(--d30)">8-30d</span>
+          <span class="bg-sort-btn" onclick="bgSort('d90')" id="bgs-d90" style="color:var(--d90)">1-3m</span>
+          <span class="bg-sort-btn" onclick="bgSort('d180')" id="bgs-d180" style="color:var(--d180)">3-6m</span>
+          <span class="bg-sort-btn" onclick="bgSort('old')" id="bgs-old" style="color:var(--old)">+6m</span>
+        </div>
+        <div id="bg-rows"></div>
+      </div>
+    </div><!-- /tab-bygroup -->
+
+    <!-- TAB: REMOVAL -->
+    <div class="tab-panel" id="tab-removal">
+      <div id="removal-content"></div>
+    </div><!-- /tab-removal -->
+
+  </div><!-- /dash-body -->
+</div>
+
+<script>
+const GROUPS = [
+  {key:'never', label:'Nunca acessaram',  color:'var(--never)', bg:'var(--never-bg)', mid:'#E05040', icon:'✕'},
+  {key:'d7',   label:`Ultimos 7 dias`,    color:'var(--d7)',    bg:'var(--d7-bg)',    mid:'#1D9E75', icon:'✓'},
+  {key:'d30',  label:'8 a 30 dias',       color:'var(--d30)',   bg:'var(--d30-bg)',   mid:'#378ADD', icon:'◷'},
+  {key:'d90',  label:'1 a 3 meses',       color:'var(--d90)',   bg:'var(--d90-bg)',   mid:'#BA7517', icon:'◈'},
+  {key:'d180', label:'3 a 6 meses',       color:'var(--d180)',  bg:'var(--d180-bg)', mid:'#7F77DD', icon:'◇'},
+  {key:'old',  label:'Acima de 6 meses',  color:'var(--old)',   bg:'var(--old-bg)',   mid:'#888780', icon:'▣'},
+];
+
+const TODAY = new Date();
+let allUsers = [];
+let filterMode = 'all';
+
+// ── PARSER ──────────────────────────────────────────────────────────────
+function parseDays(str) {
+  if (!str || /nunca/i.test(str)) return null;
+  str = str.trim();
+  if (/minuto|hora/i.test(str)) return 0;
+  if (/^ontem/i.test(str)) return 1;
+  const d = str.match(/há (\d+) dias?/i); if (d) return +d[1];
+  if (/1 semana atrás|há 1 semana/i.test(str)) return 7;
+  const s = str.match(/há (\d+) semanas?/i); if (s) return +s[1]*7;
+  const dt = str.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (dt) return Math.round((TODAY - new Date(+dt[3],+dt[2]-1,+dt[1]))/86400000);
+  return null;
+}
+
+function classify(days) {
+  if (days === null) return 'never';
+  if (days <= 7)   return 'd7';
+  if (days <= 30)  return 'd30';
+  if (days <= 90)  return 'd90';
+  if (days <= 180) return 'd180';
+  return 'old';
+}
+
+function isExt(email) {
+  if (!email) return false;
+  return /externo\.|proj\.|@gmail\.|@hotmail\.|@yahoo\.|@outlook\./.test(email);
+}
+
+function initials(name) {
+  const p = name.trim().split(/\s+/);
+  return p.length === 1 ? p[0].slice(0,2).toUpperCase() : (p[0][0]+p[p.length-1][0]).toUpperCase();
+}
+
+// Filtra grupos: começa com ACS e termina com -ATENDIMENTO_JSD
+function isRelevantGroup(g) {
+  return /^ACS-/i.test(g) && /-ATENDIMENTO_JSD$/i.test(g);
+}
+
+function parseUsers(raw) {
+  const users = [];
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].match(/^[\w._%+\-]+@[\w.\-]+\.[a-z]{2,}$/i)) continue;
+
+    const email = lines[i];
+    const login = i >= 1 ? lines[i-1] : '';
+    const name  = i >= 2 ? lines[i-2] : '';
+    if (!name || name.includes('@') || /^\d+$/.test(name) || name.length < 3) continue;
+    if (/^(perfil|contagem|último|ações|grupo|diretório|mostrar)/i.test(name)) continue;
+
+    let lastStr = 'Nunca fez login';
+    let days = null;
+    const groups = [];
+
+    // Varre as próximas linhas até o próximo bloco de usuário
+    for (let j = i+1; j < Math.min(i+60, lines.length); j++) {
+      const line = lines[j];
+
+      // Parar se chegou no próximo email (próximo usuário)
+      if (line.match(/^[\w._%+\-]+@[\w.\-]+\.[a-z]{2,}$/i) && j > i+2) break;
+
+      // Último acesso
+      if (/^nunca fez login$/i.test(line)) { lastStr = 'Nunca fez login'; days = null; continue; }
+      const mLast = line.match(/^último:\s*(.+)$/i);
+      if (mLast) { lastStr = mLast[1]; days = parseDays(mLast[1]); continue; }
+      if (lastStr === 'Nunca fez login' && days === undefined &&
+          /^(ontem|há \d+|1 semana|\d{2}\/\d{2}\/\d{4})/i.test(line)) {
+        lastStr = line; days = parseDays(line); continue;
+      }
+
+      // Grupos — qualquer linha que parece um grupo Jira (ACS-*, APL-*, etc.)
+      if (/^(ACS|APL|jira-|service-desk|Lista )/i.test(line)) {
+        if (isRelevantGroup(line)) groups.push(line);
+        continue;
+      }
+    }
+
+    users.push({
+      name, login, email, lastStr,
+      days: days === undefined ? null : days,
+      group: classify(days === undefined ? null : days),
+      ext: isExt(email),
+      initials: initials(name),
+      groups,
+    });
+  }
+  return users;
+}
+
+// ── GAUGE ──────────────────────────────────────────────────────────────
+function updateGauge() {
+  const total = parseInt(document.getElementById('total-licenses-dash').value) || 500;
+  const used  = allUsers.length;
+  const pct   = Math.min(100, Math.round(used / total * 100));
+  const avail = total - used;
+  const never = allUsers.filter(u => u.group === 'never').length;
+  const old   = allUsers.filter(u => u.group === 'old').length;
+  const rec   = never + old;
+
+  const arcColor = pct >= 95 ? '#C0392B' : pct >= 80 ? '#BA7517' : '#1D9E75';
+  const pctColor = pct >= 95 ? 'var(--danger)' : pct >= 80 ? 'var(--warn)' : 'var(--ok)';
+  const arcLen = 239;
+
+  document.getElementById('gauge-arc').style.strokeDashoffset = arcLen - (arcLen * pct / 100);
+  document.getElementById('gauge-arc').style.stroke = arcColor;
+  document.getElementById('gauge-needle').style.transform = `rotate(${-90 + pct/100*180}deg)`;
+  document.getElementById('gauge-pct-text').innerHTML = `${pct}<span>%</span>`;
+  document.getElementById('gauge-pct-text').style.color = pctColor;
+  document.getElementById('used-label').textContent = `${used} de ${total} usuários`;
+  document.getElementById('occ-bar').style.width = pct + '%';
+  document.getElementById('occ-bar').style.background = arcColor;
+
+  const availEl = document.getElementById('stat-available');
+  availEl.textContent = Math.max(0, avail);
+  availEl.className = 'stat-val ' + (avail <= 10 ? 'bad' : avail <= 50 ? 'warn' : 'good');
+  document.getElementById('stat-used').textContent = used;
+  document.getElementById('stat-never').textContent = never;
+  document.getElementById('stat-recoverable').textContent = rec;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const total = parseInt(document.getElementById('total-licenses-import').value) || 500;
+  document.getElementById('total-licenses-dash').value = total;
+  document.getElementById('header-date').textContent =
+    TODAY.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  renderMetrics();
+  renderGroups();
+  setTimeout(updateGauge, 80);
+}
+
+function renderMetrics() {
+  const users = filtered();
+  const total = users.length;
+  const byGroup = {};
+  GROUPS.forEach(g => byGroup[g.key] = users.filter(u => u.group === g.key));
+  document.getElementById('metrics').innerHTML =
+    GROUPS.map(g => `
+      <div class="mcard">
+        <div class="mlabel">${g.label}</div>
+        <div class="mnum" style="color:${g.color}">${byGroup[g.key].length}</div>
+      </div>`).join('') +
+    `<div class="mcard total"><div class="mlabel">Total filtrado</div><div class="mnum">${total}</div></div>`;
+}
+
+function renderGroups() {
+  const users = filtered();
+  const total = users.length;
+  const byGroup = {};
+  GROUPS.forEach(g => byGroup[g.key] = users.filter(u => u.group === g.key));
+
+  document.getElementById('groups-container').innerHTML = GROUPS.map((g, gi) => {
+    const list = byGroup[g.key];
+    const pct  = total ? Math.round(list.length / total * 100) : 0;
+
+    // Ordenar: mais dias sem acesso primeiro (nunca logou = Infinity); empate → nome
+    const sorted = [...list].sort((a, b) => {
+      const da = a.days === null ? Infinity : a.days;
+      const db = b.days === null ? Infinity : b.days;
+      if (db !== da) return db - da;
+      return a.name.localeCompare(b.name, 'pt-BR');
+    });
+    let bodyHtml = '';
+    if (list.length === 0) {
+      bodyHtml = `<div class="empty-row">Nenhum usuário neste grupo.</div>`;
+    } else {
+      // cabeçalho das colunas
+      bodyHtml = `
+        <div class="urow-header">
+          <input type="checkbox" class="ucheck-all" title="Marcar/desmarcar todos" onchange="toggleAllInGroup(${gi}, this.checked)">
+          <span></span>
+          <span>Usuário</span>
+          <span>Grupos de acesso (ACS-…-ATENDIMENTO_JSD)</span>
+          <span></span>
+          <span>Último acesso</span>
+          <span>Dias</span>
+        </div>` +
+        sorted.map(u => {
+          const tagsHtml = u.groups.length
+            ? u.groups.map(gr => {
+                // Mostra versão curta: remove prefixo ACS- e sufixo -ATENDIMENTO_JSD
+                const short = gr.replace(/^ACS-/i,'').replace(/-ATENDIMENTO_JSD$/i,'');
+                return `<span class="gtag" title="${gr}">${short}</span>`;
+              }).join('')
+            : `<span class="gtag-empty">sem grupos relevantes</span>`;
+
+          return `
+            <div class="urow" id="urow-${safeId(u.login)}" data-login="${escHtml(u.login)}" onclick="rowClickEl(event,this)" style="cursor:pointer">
+              <input type="checkbox" class="ucheck" data-login="${escHtml(u.login)}" onchange="toggleSelectedEl(this)" onclick="event.stopPropagation()" ${selectedLogins.has(u.login)?'checked':''}>
+              <div class="uavatar" style="background:${g.bg};color:${g.color}">${u.initials}</div>
+              <div class="ucol-main">
+                <span class="uname">${u.name}</span>
+                <span class="ulogin">${u.login}</span>
+              </div>
+              <div class="ucol-groups">${tagsHtml}</div>
+              <div class="ucol-ext">${u.ext ? '<span class="ext-tag">externo</span>' : ''}</div>
+              <div class="ucol-time"><span class="utime">${u.lastStr}</span></div>
+              <div class="ucol-days"><span class="udays" style="color:${u.days===null?'var(--text3)':u.days<=7?'var(--d7)':u.days<=30?'var(--d30)':u.days<=90?'var(--d90)':u.days<=180?'var(--d180)':'var(--old)'}">${u.days===null?'—':u.days===0?'hoje':u.days===1?'1 dia':u.days+' dias'}</span></div>
+            </div>`;
+        }).join('');
+    }
+
+    return `
+      <div class="gcard">
+        <div class="gheader" onclick="toggleGroup(${gi})">
+          <div class="gicon" style="background:${g.bg};color:${g.color}">${g.icon}</div>
+          <span class="gtitle">${g.label}</span>
+          <span class="gbadge" style="background:${g.bg};color:${g.color}">${list.length}</span>
+          <span class="gpct">${pct}%</span>
+          <span class="gchev" id="chev-${gi}">▾</span>
+        </div>
+        <div class="gbar-wrap"><div class="gbar-fill" style="width:${pct}%;background:${g.mid}"></div></div>
+        <div class="gbody" id="gb-${gi}">${bodyHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+function toggleGroup(i) {
+  const b = document.getElementById('gb-'+i);
+  const c = document.getElementById('chev-'+i);
+  b.style.display = b.style.display === 'block' ? 'none' : 'block';
+  c.classList.toggle('open', b.style.display === 'block');
+}
+
+function filtered() {
+  if (filterMode === 'ext') return allUsers.filter(u => u.ext);
+  if (filterMode === 'int') return allUsers.filter(u => !u.ext);
+  return allUsers;
+}
+
+function setFilter(mode, btn) {
+  filterMode = mode;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMetrics();
+  renderGroups();
+}
+
+// ── IMPORT / EXPORT ──────────────────────────────────────────────────────
+function parseAndShow() {
+  const raw = document.getElementById('raw-input').value;
+  if (!raw.trim()) { setStatus('Cole o texto primeiro.','err'); return; }
+  const users = parseUsers(raw);
+  if (!users.length) { setStatus(`Nenhum usuario encontrado. Verifique o formato.`,'err'); return; }
+  allUsers = users;
+  setStatus(`${users.length} usuários encontrados.`,'ok');
+  setTimeout(() => {
+    document.getElementById('screen-import').classList.remove('active');
+    document.getElementById('screen-dashboard').classList.add('active');
+    renderDashboard();
+  }, 200);
+}
+
+function goImport() {
+  document.getElementById('screen-dashboard').classList.remove('active');
+  document.getElementById('screen-import').classList.add('active');
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('parse-status');
+  el.textContent = msg;
+  el.className = 'import-status' + (type ? ' '+type : '');
+}
+
+function exportCSV() {
+  const users = filtered();
+  const header = `Nome,Login,Email,Tipo,Grupo de acesso,Grupos ACS-ATENDIMENTO_JSD,Ultimo acesso,Dias desde acesso\n`;
+  const rows = users.map(u =>
+    [u.name, u.login, u.email,
+     u.ext ? 'externo' : 'interno',
+     GROUPS.find(g => g.key === u.group)?.label || u.group,
+     u.groups.join(' | '),
+     u.lastStr,
+     u.days === null ? '' : u.days
+    ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['\uFEFF'+header+rows], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `jsm_licencas_${TODAY.toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function safeId(s) {
+  return (s||'').replace(/[^a-zA-Z0-9_-]/g,'_');
+}
+
+// ── SELECTION ───────────────────────────────────────────────────────────────
+const selectedLogins = new Set();
+
+function toggleSelected(login, checked) {
+  if (checked) selectedLogins.add(login);
+  else selectedLogins.delete(login);
+  const row = document.getElementById('urow-'+safeId(login));
+  if (row) row.classList.toggle('selected', checked);
+  updateRemovalBadge();
+}
+
+function toggleSelectedEl(cb) {
+  const login = cb.dataset.login;
+  toggleSelected(login, cb.checked);
+}
+
+function rowClickEl(event, rowEl) {
+  if (event.target.tagName === 'INPUT') return;
+  const login = rowEl.dataset.login;
+  const cb = rowEl.querySelector('.ucheck');
+  if (cb) {
+    cb.checked = !cb.checked;
+    toggleSelected(login, cb.checked);
+  }
+}
+
+function removeFromSelectionEl(btn) {
+  removeFromSelection(btn.dataset.login);
+}
+
+function toggleAllInGroup(gi, checked) {
+  const group = GROUPS[gi];
+  const users = filtered().filter(u => u.group === group.key);
+  users.forEach(u => {
+    if (checked) selectedLogins.add(u.login);
+    else selectedLogins.delete(u.login);
+    const row = document.getElementById('urow-'+safeId(u.login));
+    if (row) {
+      row.classList.toggle('selected', checked);
+      const cb = row.querySelector('.ucheck');
+      if (cb) cb.checked = checked;
+    }
+  });
+  updateRemovalBadge();
+}
+
+function updateRemovalBadge() {
+  const n = selectedLogins.size;
+  const badge = document.getElementById('removal-count-badge');
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline-flex' : 'none';
+}
+
+function clearAllSelected() {
+  selectedLogins.clear();
+  document.querySelectorAll('.ucheck').forEach(cb => { cb.checked = false; });
+  document.querySelectorAll('.urow.selected').forEach(r => r.classList.remove('selected'));
+  document.querySelectorAll('.ucheck-all').forEach(cb => { cb.checked = false; });
+  updateRemovalBadge();
+  renderRemoval();
+}
+
+// ── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'bygroup') renderByGroup();
+  if (name === 'removal') renderRemoval();
+}
+
+// ── BY-GROUP ─────────────────────────────────────────────────────────────────
+let bgFilterMode = 'all';
+let bgSortKey = 'total';
+let bgSortDir = -1; // -1 = desc
+
+function bgFiltered() {
+  if (bgFilterMode === 'ext') return allUsers.filter(u => u.ext);
+  if (bgFilterMode === 'int') return allUsers.filter(u => !u.ext);
+  return allUsers;
+}
+
+function setBgFilter(mode, btn) {
+  bgFilterMode = mode;
+  document.querySelectorAll('#bg-filter-bar .fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderByGroup();
+}
+
+function bgSort(key) {
+  if (bgSortKey === key) bgSortDir *= -1;
+  else { bgSortKey = key; bgSortDir = -1; }
+  renderByGroup();
+}
+
+function renderByGroup() {
+  const users = bgFiltered();
+  // Montar mapa grupo → contagens
+  const map = {};
+  users.forEach(u => {
+    u.groups.forEach(g => {
+      if (!map[g]) map[g] = {name:g, total:0, never:0, d7:0, d30:0, d90:0, d180:0, old:0};
+      map[g].total++;
+      map[g][u.group]++;
+    });
+  });
+
+  let rows = Object.values(map);
+  if (!rows.length) {
+    document.getElementById('bg-rows').innerHTML = '<div class="empty-row" style="padding:16px 18px">Nenhum grupo encontrado nos dados importados.</div>';
+    document.getElementById('bg-summary').innerHTML = '';
+    return;
+  }
+
+  // Ordenar
+  rows.sort((a,b) => {
+    const va = a[bgSortKey] ?? a.name;
+    const vb = b[bgSortKey] ?? b.name;
+    if (typeof va === 'string') return va.localeCompare(vb,'pt-BR') * bgSortDir;
+    return (vb - va) * (bgSortDir < 0 ? 1 : -1);
+  });
+
+  const maxTotal = Math.max(...rows.map(r => r.total), 1);
+
+  // Summary cards
+  const totalUsers = users.length;
+  const totalGroups = rows.length;
+  const avgPerGroup = totalGroups ? (rows.reduce((s,r)=>s+r.total,0)/totalGroups).toFixed(1) : 0;
+  const biggestGroup = rows.reduce((a,b)=>a.total>b.total?a:b, rows[0]);
+  document.getElementById('bg-summary').innerHTML = `
+    <div class="bg-sum-card"><div class="bg-sum-label">Grupos distintos</div><div class="bg-sum-val">${totalGroups}</div></div>
+    <div class="bg-sum-card"><div class="bg-sum-label">Usuários no filtro</div><div class="bg-sum-val">${totalUsers}</div></div>
+    <div class="bg-sum-card"><div class="bg-sum-label">Média usuários/grupo</div><div class="bg-sum-val">${avgPerGroup}</div></div>
+    <div class="bg-sum-card"><div class="bg-sum-label">Maior grupo</div><div class="bg-sum-val" style="font-size:13px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">${biggestGroup.name.replace(/^ACS-/,'').replace(/-ATENDIMENTO_JSD$/,'')} <span style="font-size:16px;font-family:'Consolas','Menlo','Monaco',monospace">(${biggestGroup.total})</span></div></div>`;
+
+  // Atualizar indicadores de sort
+  ['name','total','never','d7','d30','d90','d180','old'].forEach(k => {
+    const el = document.getElementById('bgs-'+k);
+    if (el) el.classList.toggle('bg-sort-active', bgSortKey === k);
+  });
+
+  const GCOLS = ['never','d7','d30','d90','d180','old'];
+  const GCOLORS = {'never':'var(--never)','d7':'var(--d7)','d30':'var(--d30)','d90':'var(--d90)','d180':'var(--d180)','old':'var(--old)'};
+
+  document.getElementById('bg-rows').innerHTML = rows.map(r => {
+    const shortName = r.name.replace(/^ACS-/,'').replace(/-ATENDIMENTO_JSD$/,'');
+    const cells = GCOLS.map(k => `<span class="bg-cell${r[k]===0?' zero':''}" style="${r[k]>0?'color:'+GCOLORS[k]:''}">${r[k]||'—'}</span>`).join('');
+    const barW = Math.round(r.total/maxTotal*100);
+    return `<div class="bg-row" title="${r.name}">
+      <span class="bg-name" title="${r.name}">${shortName}</span>
+      <span class="bg-cell">${r.total}</span>
+      ${cells}
+    </div>`;
+  }).join('');
+}
+
+// ── REMOVAL TAB ──────────────────────────────────────────────────────────────
+function renderRemoval() {
+  const container = document.getElementById('removal-content');
+  const selected = allUsers.filter(u => selectedLogins.has(u.login));
+
+  if (!selected.length) {
+    container.innerHTML = `
+      <div class="removal-empty">
+        <div class="big">☑</div>
+        <p>Nenhum usuário marcado ainda.</p>
+        <p style="margin-top:6px;font-size:12px;color:var(--text3)">Abra um grupo na aba "Visão geral" e marque os checkboxes das linhas.</p>
+      </div>`;
+    return;
+  }
+
+  // Sort: days desc then name
+  const sorted = [...selected].sort((a,b) => {
+    const da = a.days === null ? Infinity : a.days;
+    const db = b.days === null ? Infinity : b.days;
+    if (db !== da) return db - da;
+    return a.name.localeCompare(b.name,'pt-BR');
+  });
+
+  const byGroup = {};
+  GROUPS.forEach(g => byGroup[g.key] = sorted.filter(u => u.group === g.key).length);
+
+  const summaryCards = GROUPS.filter(g => byGroup[g.key] > 0).map(g =>
+    `<div class="bg-sum-card">
+      <div class="bg-sum-label" style="color:${g.color}">${g.label}</div>
+      <div class="bg-sum-val" style="color:${g.color}">${byGroup[g.key]}</div>
+    </div>`).join('');
+
+  const rows = sorted.map(u => {
+    const grp = GROUPS.find(g => g.key === u.group);
+    const tagsHtml = u.groups.length
+      ? u.groups.map(gr => `<span class="gtag" title="${gr}">${gr.replace(/^ACS-/,'').replace(/-ATENDIMENTO_JSD$/,'')}</span>`).join('')
+      : `<span class="gtag-empty">—</span>`;
+    const daysColor = u.days===null?'var(--text3)':u.days<=7?'var(--d7)':u.days<=30?'var(--d30)':u.days<=90?'var(--d90)':u.days<=180?'var(--d180)':'var(--old)';
+    const daysLabel = u.days===null?'—':u.days===0?'hoje':u.days===1?'1 dia':u.days+' dias';
+    return `
+      <div class="removal-row">
+        <button class="uncheck-btn" data-login="${escHtml(u.login)}" onclick="removeFromSelectionEl(this)" title="Desmarcar">✕</button>
+        <div class="ucol-main">
+          <span class="uname">${u.name}</span>
+          <span class="ulogin">${u.login} ${u.ext?'<span class="ext-tag">externo</span>':''}</span>
+        </div>
+        <div class="ucol-groups" style="max-width:360px">${tagsHtml}</div>
+        <div class="ucol-time"><span class="utime">${u.lastStr}</span></div>
+        <div class="ucol-days"><span class="udays" style="color:${daysColor}">${daysLabel}</span></div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="removal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h2>Candidatos à remoção</h2>
+        <span class="removal-badge">${selected.length}</span>
+      </div>
+      <div class="removal-actions">
+        <button class="btn-remove-all" onclick="clearAllSelected()">Limpar seleção</button>
+        <button class="dbtn accent" onclick="exportRemovalCSV()">Exportar lista CSV</button>
+      </div>
+    </div>
+    <div class="bg-summary">${summaryCards}</div>
+    <div class="removal-table">
+      <div class="removal-row-header">
+        <span></span>
+        <span>Usuário</span>
+        <span>Grupos de acesso</span>
+        <span>Último acesso</span>
+        <span>Dias</span>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+function removeFromSelection(login) {
+  selectedLogins.delete(login);
+  const row = document.getElementById('urow-'+safeId(login));
+  if (row) {
+    row.classList.remove('selected');
+    const cb = row.querySelector('.ucheck');
+    if (cb) cb.checked = false;
+  }
+  updateRemovalBadge();
+  renderRemoval();
+}
+
+function exportRemovalCSV() {
+  const selected = allUsers.filter(u => selectedLogins.has(u.login));
+  const header = `Nome,Login,Email,Tipo,Faixa de acesso,Grupos ACS-ATENDIMENTO_JSD,Ultimo acesso,Dias
+`;
+  const rows = selected.map(u =>
+    [u.name, u.login, u.email,
+     u.ext?'externo':'interno',
+     GROUPS.find(g=>g.key===u.group)?.label||u.group,
+     u.groups.join(' | '),
+     u.lastStr,
+     u.days===null?'':u.days
+    ].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob(['﻿'+header+rows],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `jsm_remocao_${TODAY.toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── SAMPLE ───────────────────────────────────────────────────────────────
+function loadSample() {
+  document.getElementById('raw-input').value =
+`Perfil do usuário Luiz Henrique Pinheiro Brasil Correa
+Luiz Henrique Pinheiro Brasil Correa
+luiz.brasil
+luiz.brasil@fgv.br
+Contagem: 919612
+Último: há 7 minutos
+ACS-DO-SOA-PROJ
+ACS-IBRE-Areas-Negocios
+ACS-JIRA-ATENDIMENTO_JSD
+ACS-SOPS-ATENDIMENTO
+ACS-TIC-GCI-ATENDIMENTO_JSD
+APL-TIC-JIRA-ATENDIMENTO
+Perfil do usuário José Ricardo Cavalcante
+José Ricardo Cavalcante
+jose.cavalcante
+jose.cavalcante@fgv.br
+Contagem: 383
+Último: há 2 dias 11:25
+ACS-JIRA-ATENDIMENTO_JSD
+ACS-SOPS-ATENDIMENTO
+ACS-TIC-COLABORADORES
+ACS-TIC-INFRA_DEMANDA-ATENDIMENTO_JSD
+APL-TIC-JIRA-ATENDIMENTO
+Perfil do usuário Adenilson de Assis Barcelos
+Adenilson de Assis Barcelos
+adenilson.barcelos
+adenilson.barcelos@externo.fgv.br
+Nunca fez login
+ACS-JIRA-ATENDIMENTO_JSD
+ACS-SOPS-ATENDIMENTO
+ACS-SOPS-ENG_MANUTENCAO_RJ-ATENDIMENTO_JSD
+APL-SOPS-JIRA-ATENDIMENTO_JSD
+APL-TIC-JIRA-ATENDIMENTO
+Perfil do usuário Adriana Ruiz Leiroz Dominguez
+Adriana Ruiz Leiroz Dominguez
+adriana.dominguez
+adriana.dominguez@fgv.br
+Contagem: 41
+Último: 24/03/2026 12:05
+ACS-JIRA-ATENDIMENTO_JSD
+ACS-RH-ATENDIMENTO_JSD
+ACS-SOPS-ATENDIMENTO
+ACS-SOPS-JIRA-ATENDIMENTO_EXPEDICAO
+APL-RH-JIRA-ATENDIMENTO_JSD
+Perfil do usuário Valmir Souza da Silva
+Valmir Souza da Silva
+valmir.silva
+valmir.silva@externo.fgv.br
+Contagem: 73
+Último: 09/10/2025 07:31
+ACS-JIRA-ATENDIMENTO_JSD
+ACS-SOPS-ATENDIMENTO
+ACS-SOPS-ENG_MANUTENCAO_RJ-ATENDIMENTO_JSD
+APL-SOPS-JIRA-ATENDIMENTO_JSD
+APL-TIC-JIRA-ATENDIMENTO
+Perfil do usuário Operação
+Operação
+operacao
+operacao@fgv.br
+Contagem: 4
+Último: 11/08/2022 18:51
+APL-TIC-JIRA-ATENDIMENTO
+jira-users`;
+  setStatus('Dados de exemplo carregados — clique em "Gerar painel"','ok');
+}
+</script>
+</body>
+</html>
