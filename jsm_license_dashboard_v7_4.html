@@ -636,7 +636,7 @@ function exportCSV() {
      u.groups.join(' | '),
      u.lastStr,
      u.days === null ? '' : u.days
-    ].map(v => `"${(v||'').replace(/"/g,'""')}"`).join(',')
+    ].map(v => { const s = String(v == null ? '' : v); return `"${s.replace(/"/g,'""')}"`; }).join(',')
   ).join('\n');
   const blob = new Blob(['\uFEFF'+header+rows], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
@@ -900,8 +900,7 @@ function removeFromSelection(login) {
 
 function exportRemovalCSV() {
   const selected = allUsers.filter(u => selectedLogins.has(u.login));
-  const header = `Nome,Login,Email,Tipo,Faixa de acesso,Grupos ACS-ATENDIMENTO_JSD,Ultimo acesso,Dias
-`;
+  const header = `Nome,Login,Email,Tipo,Faixa de acesso,Grupos ACS-ATENDIMENTO_JSD,Ultimo acesso,Dias\n`;
   const rows = selected.map(u =>
     [u.name, u.login, u.email,
      u.ext?'externo':'interno',
@@ -909,7 +908,7 @@ function exportRemovalCSV() {
      u.groups.join(' | '),
      u.lastStr,
      u.days===null?'':u.days
-    ].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')
+    ].map(v=>{ const s = String(v == null ? '' : v); return `"${s.replace(/"/g,'""')}"`; }).join(',')
   ).join('\n');
   const blob = new Blob(['﻿'+header+rows],{type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
