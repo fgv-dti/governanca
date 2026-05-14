@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CMDB · Auditoria de Governança · DTI/FGV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+<style>
+:root {
+  --canvas:    #F4F2EE;
+  --surface:   #FAF8F5;
+  --sunken:    #EAE7E1;
+  --inset:     #1F1D1A;
+  --b-subtle:  #E2DED6;
+  --b-default: #C9C3B7;
+  --b-strong:  #1F1D1A;
+  --t1:        #1F1D1A;
+  --t2:        #5C574E;
+  --t3:        #8B8579;
+  --t-inv:     #FAF8F5;
+  --ok:        #3F7D58;
+  --ok-bg:     #E4EDE2;
+  --warn:      #B8732A;
+  --warn-bg:   #F5E7D4;
+  --err:       #A8332A;
+  --err-bg:    #F3DCD8;
+  --neu:       #5C574E;
+  --neu-bg:    #E2DED6;
+  --fgv:       #0E3B5C;
+  --mono:      'IBM Plex Mono', monospace;
+  --sans:      'IBM Plex Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 13px; }
+body { font-family: var(--sans); background: var(--canvas); color: var(--t1); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.shell { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; flex-shrink: 0; background: var(--inset); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.sb-brand { padding: 20px 16px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+.sb-logo { width: 32px; height: 32px; border-radius: 4px; background: var(--fgv); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--t-inv); letter-spacing: 0.05em; }
+.sb-org { font-size: 13px; font-weight: 600; color: var(--t-inv); }
+.sb-sub { font-size: 11px; color: rgba(255,255,255,0.4); font-family: var(--mono); }
+.sb-section { padding: 20px 16px 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+.sb-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.55); transition: background .12s, color .12s; border-left: 2px solid transparent; }
+.sb-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); }
+.sb-item.active { color: var(--t-inv); background: rgba(255,255,255,0.08); border-left-color: var(--fgv); }
+.sb-count { margin-left: auto; font-family: var(--mono); font-size: 11px; background: rgba(255,255,255,0.1); border-radius: 10px; padding: 1px 7px; color: rgba(255,255,255,0.5); }
+.sb-count.err { background: var(--err-bg); color: var(--err); }
+.sb-foot { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+.sb-av { width: 30px; height: 30px; border-radius: 50%; background: var(--fgv); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--t-inv); }
+.sb-who b { font-size: 12px; color: var(--t-inv); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-who span { font-size: 10px; color: rgba(255,255,255,0.4); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.topbar { height: 48px; background: var(--inset); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.tb-crumb { font-size: 12px; color: rgba(255,255,255,0.45); font-family: var(--mono); display: flex; align-items: center; gap: 6px; }
+.tb-crumb span { color: rgba(255,255,255,0.25); }
+.tb-crumb b { color: var(--t-inv); }
+.tb-right { display: flex; align-items: center; gap: 16px; }
+.tb-ts { font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.35); display: flex; align-items: center; gap: 6px; }
+.tb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); flex-shrink: 0; }
+.tb-env { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.12); border-radius: 3px; padding: 2px 7px; }
+.breadcrumb { height: 36px; background: var(--sunken); border-bottom: 1px solid var(--b-subtle); display: flex; align-items: center; padding: 0 32px; gap: 8px; font-size: 11px; color: var(--t3); }
+.breadcrumb .now { color: var(--t1); font-weight: 500; }
+.breadcrumb .sep { color: var(--b-default); }
+.hero { padding: 28px 32px 0; background: var(--canvas); }
+.hero-title { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; }
+.hero-sub { font-size: 12px; color: var(--t2); margin-bottom: 20px; }
+.hero-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px; background: var(--b-default); border: 1px solid var(--b-default); border-radius: 4px; overflow: hidden; margin-bottom: -1px; }
+.stat-card { background: var(--surface); padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+.stat-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); }
+.stat-num { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1; }
+.stat-num.ok { color: var(--ok); } .stat-num.warn { color: var(--warn); } .stat-num.err { color: var(--err); }
+.stat-bar { height: 2px; background: var(--b-subtle); border-radius: 1px; overflow: hidden; }
+.stat-bar i { display: block; height: 100%; border-radius: 1px; }
+.stat-bar i.ok { background: var(--ok); } .stat-bar i.warn { background: var(--warn); } .stat-bar i.err { background: var(--err); } .stat-bar i.neu { background: var(--b-default); }
+.stat-meta { font-size: 11px; color: var(--t3); font-family: var(--mono); }
+.toolbar { background: var(--sunken); border-top: 1px solid var(--b-subtle); border-bottom: 1px solid var(--b-default); padding: 0 32px; display: flex; align-items: center; }
+.tab-btn { padding: 12px 16px; font-size: 12px; font-weight: 500; color: var(--t2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: var(--sans); }
+.tab-btn:hover { color: var(--t1); }
+.tab-btn.active { color: var(--t1); border-bottom-color: var(--t1); }
+.tab-badge { font-family: var(--mono); font-size: 10px; background: var(--neu-bg); color: var(--neu); border-radius: 10px; padding: 1px 6px; }
+.tab-badge.err { background: var(--err-bg); color: var(--err); }
+.body { padding: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+.alert-banner { background: var(--err-bg); border: 1px solid rgba(168,51,42,0.2); border-left: 3px solid var(--err); border-radius: 4px; padding: 12px 16px; display: flex; gap: 12px; }
+.alert-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.alert-body { font-size: 12px; color: var(--t2); line-height: 1.5; }
+.alert-body b { color: var(--t1); }
+.kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.kpi-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.kpi { background: var(--surface); border: 1px solid var(--b-default); border-radius: 4px; padding: 14px 16px; border-left: 3px solid var(--b-default); }
+.kpi.ok { border-left-color: var(--ok); } .kpi.warn { border-left-color: var(--warn); } .kpi.err { border-left-color: var(--err); } .kpi.info { border-left-color: var(--fgv); }
+.kpi-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 8px; }
+.kpi-num { font-family: var(--mono); font-size: 26px; font-weight: 500; line-height: 1; margin-bottom: 6px; }
+.kpi-meta { font-size: 11px; color: var(--t3); font-family: var(--mono); }
+.kpi-pct { font-weight: 500; }
+.kpi.ok .kpi-pct { color: var(--ok); } .kpi.warn .kpi-pct { color: var(--warn); } .kpi.err .kpi-pct { color: var(--err); } .kpi.info .kpi-pct { color: var(--fgv); }
+.card { background: var(--surface); border: 1px solid var(--b-default); border-radius: 4px; overflow: hidden; }
+.card-head { padding: 16px 20px; border-bottom: 1px solid var(--b-subtle); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.card-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.card-sub { font-size: 11px; color: var(--t3); }
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tbl { width: 100%; border-collapse: collapse; }
+.tbl thead tr { background: var(--sunken); }
+.tbl th { padding: 9px 16px; text-align: left; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); border-bottom: 1px solid var(--b-default); white-space: nowrap; font-family: var(--sans); }
+.tbl th.r { text-align: right; }
+.tbl td { padding: 10px 16px; font-size: 12px; border-bottom: 1px solid var(--b-subtle); vertical-align: middle; }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(0,0,0,0.015); }
+.tbl td.r { text-align: right; font-family: var(--mono); }
+.tbl td.ok { color: var(--ok); font-family: var(--mono); text-align: right; }
+.tbl td.warn { color: var(--warn); font-family: var(--mono); text-align: right; }
+.tbl td.err { color: var(--err); font-family: var(--mono); text-align: right; }
+.tbl td.muted { color: var(--t3); font-family: var(--mono); text-align: right; }
+.tbl td.zero { color: var(--b-default); font-family: var(--mono); text-align: right; }
+.frente-cell { display: flex; align-items: center; gap: 10px; }
+.frente-strip { width: 3px; height: 32px; border-radius: 2px; flex-shrink: 0; }
+.frente-name { font-size: 12px; font-weight: 500; }
+.frente-tag { font-size: 10px; color: var(--t3); font-family: var(--mono); }
+.health-cell { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+.health-row { display: flex; justify-content: space-between; align-items: center; }
+.health-label { font-size: 10px; color: var(--t3); }
+.health-pct { font-family: var(--mono); font-size: 11px; font-weight: 500; }
+.health-pct.ok { color: var(--ok); } .health-pct.warn { color: var(--warn); } .health-pct.err { color: var(--err); }
+.hbar { height: 3px; background: var(--b-subtle); border-radius: 2px; overflow: hidden; }
+.hbar i { display: block; height: 100%; border-radius: 2px; }
+.hbar i.ok { background: var(--ok); } .hbar i.warn { background: var(--warn); } .hbar i.err { background: var(--err); }
+.sbar { height: 4px; border-radius: 2px; overflow: hidden; display: flex; gap: 1px; }
+.sbar i { display: block; height: 100%; }
+.sbar i.ok { background: var(--ok); } .sbar i.warn { background: var(--warn); } .sbar i.info { background: var(--fgv); } .sbar i.err { background: var(--err); }
+.tbl-foot { padding: 10px 16px; background: var(--sunken); border-top: 1px solid var(--b-subtle); font-size: 11px; color: var(--t3); display: flex; justify-content: space-between; }
+.ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ministats { display: grid; grid-template-columns: repeat(4, 1fr); }
+.ms { padding: 16px; border-right: 1px solid var(--b-subtle); }
+.ms:last-child { border-right: none; }
+.ms-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--t3); margin-bottom: 6px; }
+.ms-num { font-family: var(--mono); font-size: 22px; font-weight: 500; line-height: 1; margin-bottom: 4px; }
+.ms-num.ok { color: var(--ok); } .ms-num.warn { color: var(--warn); } .ms-num.err { color: var(--err); }
+.ms-sub { font-size: 11px; color: var(--t3); }
+.donut-wrap { display: flex; gap: 24px; align-items: center; padding: 20px; }
+.donut { width: 100px; height: 100px; border-radius: 50%; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.donut-center { text-align: center; }
+.donut-center b { font-family: var(--mono); font-size: 16px; font-weight: 500; display: block; }
+.donut-center small { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t3); }
+.legend { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+.legend-sq { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.legend-sq.ok { background: var(--ok); } .legend-sq.warn { background: var(--warn); } .legend-sq.err { background: var(--err); } .legend-sq.neu { background: var(--neu); }
+.legend-label { flex: 1; color: var(--t2); }
+.legend-val { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+.legend-pct { font-family: var(--mono); font-size: 11px; color: var(--t3); min-width: 40px; text-align: right; }
+/* Loading */
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 16px; }
+.loading-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fgv); animation: pulse 1.2s ease-in-out infinite; }
+.loading-dots { display: flex; gap: 6px; }
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1); } }
+.loading-text { font-family: var(--mono); font-size: 12px; color: var(--t3); }
+.error-box { margin: 32px; padding: 20px; background: var(--err-bg); border: 1px solid rgba(168,51,42,0.2); border-radius: 4px; font-size: 13px; color: var(--err); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// URL do JSON no GitHub da FGV
+const DADOS_URL = "https://github.fgv.br/arquit/geradorcomunicadodti/raw/main/cmdb/dados.json";
+
+const fmt1 = n => (n || 0).toFixed(1);
+const pct  = (n, d) => d ? (n * 100 / d) : 0;
+
+/* ─── SIDEBAR ─── */
+const Sidebar = ({ tab, setTab, dados }) => {
+  const r = dados?.resumo || {};
+  const items = [
+    { id:'overview',  label:'Visão geral' },
+    { id:'saude',     label:'Saúde PRD',     count: r.instalacoesPRD?.toLocaleString('pt-BR') },
+    { id:'cobertura', label:'Cobertura',      count: r.appsTotalPRD?.toLocaleString('pt-BR') },
+    { id:'orfaos',    label:'Ativos Órfãos',  count: ((r.srvOrfaos||0)+(r.schemasOrfaos||0)).toLocaleString('pt-BR'), err:true },
+  ];
+  return (
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <div className="sb-logo">FGV</div>
+        <div>
+          <div className="sb-org">CMDB Governança</div>
+          <div className="sb-sub">DTI · Auditoria</div>
+        </div>
+      </div>
+      <div className="sb-section">Auditoria</div>
+      {items.map(it => (
+        <div key={it.id} className={`sb-item ${tab===it.id?'active':''}`} onClick={() => setTab(it.id)}>
+          <span>{it.label}</span>
+          {it.count && <span className={`sb-count ${it.err?'err':''}`}>{it.count}</span>}
+        </div>
+      ))}
+      <div style={{flex:1}} />
+      <div className="sb-foot">
+        <div className="sb-av">LB</div>
+        <div className="sb-who">
+          <b>Luiz Brasil</b>
+          <span>Governança · DTI</span>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+/* ─── TOPBAR ─── */
+const Topbar = ({ dados }) => (
+  <div className="topbar">
+    <div className="tb-crumb">
+      <span style={{color:'rgba(255,255,255,0.4)'}}>Governança</span>
+      <span>/</span>
+      <span style={{color:'rgba(255,255,255,0.4)'}}>CMDB</span>
+      <span>/</span>
+      <b>Auditoria de Inventário</b>
+    </div>
+    <div className="tb-right">
+      <div className="tb-ts">
+        <div className="tb-dot" />
+        última execução <span style={{fontWeight:500,color:'rgba(255,255,255,0.7)'}}>{dados?.geradoTs || '—'}</span>
+      </div>
+      <div className="tb-env">prod</div>
+    </div>
+  </div>
+);
+
+/* ─── HERO ─── */
+const Hero = ({ dados }) => {
+  const r = dados?.resumo || {};
+  const prdTotal = r.instalacoesPRD || 1;
+  const saudPct  = pct(r.saudaveis, prdTotal);
+  const inconsPct= pct(r.inconsistencia, prdTotal);
+  const srvTotal = r.srvAtivos || 1;
+  const srvOrfPct= pct(r.srvOrfaos, srvTotal);
+  const appTotal = r.appsTotalPRD || 1;
+  const soPRDPct = pct(r.appsSoPRD, appTotal);
+  return (
+    <div className="hero">
+      <div className="hero-title">Auditoria do CMDB de Software</div>
+      <div className="hero-sub">FGV/DTI · Análise consolidada de saúde, cobertura de ambientes e ativos órfãos · {dados?.geradoEm || '—'}</div>
+      <div className="hero-stats">
+        <div className="stat-card">
+          <div className="stat-label">Instalações ativas</div>
+          <div className="stat-num" style={{fontFamily:'var(--mono)'}}>{(r.instalacoesAtivas||0).toLocaleString('pt-BR')}</div>
+          <div className="stat-bar"><i className="neu" style={{width:'100%'}} /></div>
+          <div className="stat-meta">{(r.instalacoesPRD||0).toLocaleString('pt-BR')} em Produção</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Saudáveis (PRD)</div>
+          <div className="stat-num ok" style={{fontFamily:'var(--mono)'}}>{(r.saudaveis||0).toLocaleString('pt-BR')}</div>
+          <div className="stat-bar"><i className="ok" style={{width:`${saudPct}%`}} /></div>
+          <div className="stat-meta">{fmt1(saudPct)}% de {(r.instalacoesPRD||0).toLocaleString('pt-BR')}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Inconsist. ambiente</div>
+          <div className="stat-num err" style={{fontFamily:'var(--mono)'}}>{(r.inconsistencia||0).toLocaleString('pt-BR')}</div>
+          <div className="stat-bar"><i className="err" style={{width:`${Math.min(inconsPct*5,100)}%`}} /></div>
+          <div className="stat-meta">{fmt1(inconsPct)}% de PRD</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Servidores órfãos</div>
+          <div className="stat-num err" style={{fontFamily:'var(--mono)'}}>{(r.srvOrfaos||0).toLocaleString('pt-BR')}</div>
+          <div className="stat-bar"><i className="err" style={{width:`${srvOrfPct}%`}} /></div>
+          <div className="stat-meta">{fmt1(srvOrfPct)}% de {(r.srvAtivos||0).toLocaleString('pt-BR')} ativos</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Apps com só PRD</div>
+          <div className="stat-num warn" style={{fontFamily:'var(--mono)'}}>{(r.appsSoPRD||0).toLocaleString('pt-BR')}</div>
+          <div className="stat-bar"><i className="warn" style={{width:`${soPRDPct}%`}} /></div>
+          <div className="stat-meta">{fmt1(soPRDPct)}% de {(r.appsTotalPRD||0).toLocaleString('pt-BR')} apps</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── KPI ─── */
+const Kpi = ({ tone, label, num, delta, sub }) => (
+  <div className={`kpi ${tone}`}>
+    <div className="kpi-label">{label}</div>
+    <div className="kpi-num">{num}</div>
+    <div className="kpi-meta">{delta && <span className="kpi-pct">{delta} </span>}{sub}</div>
+  </div>
+);
+
+/* ─── TAB OVERVIEW ─── */
+const Overview = ({ dados }) => {
+  const r = dados?.resumo || {};
+  const prdTotal = r.instalacoesPRD || 1;
+  const saudPct  = pct(r.saudaveis, prdTotal);
+  const vazPct   = pct(r.camposVazios, prdTotal);
+  const incPct   = pct(r.inconsistencia, prdTotal);
+  const semFPct  = pct(r.semFrenteTIC, prdTotal);
+  const appTotal = r.appsTotalPRD || 1;
+  const srvTotal = r.srvAtivos || 1;
+  const schTotal = r.schemasAtivos || 1;
+  return (
+    <>
+      <div className="alert-banner">
+        <div style={{color:'var(--err)',flexShrink:0,paddingTop:1}}>⚠</div>
+        <div>
+          <div className="alert-title">3 itens críticos exigem atenção imediata</div>
+          <div className="alert-body">
+            <b>{(r.inconsistencia||0)} instalações com inconsistência de ambiente</b> ·{' '}
+            <b>{(r.srvOrfaos||0).toLocaleString('pt-BR')} servidores órfãos</b> ·{' '}
+            <b>{(r.schemasOrfaos||0).toLocaleString('pt-BR')} schemas sem instalação vinculada</b>
+          </div>
+        </div>
+      </div>
+      <div className="kpi-grid">
+        <Kpi tone="info" label="Instalações Produção" num={(r.instalacoesPRD||0).toLocaleString('pt-BR')} sub="ativas no CMDB" />
+        <Kpi tone="ok"   label="Saudáveis (PRD)"      num={(r.saudaveis||0).toLocaleString('pt-BR')}      delta={`${fmt1(saudPct)}%`} sub="meta 90%" />
+        <Kpi tone="warn" label="Desatualizadas >12m"   num={(r.desatualizado12m||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.desatualizado12m,prdTotal))}%`} sub="campo Revisado em" />
+        <Kpi tone="err"  label="Cert. problema"        num={(r.certProblema||0).toLocaleString('pt-BR')}   sub="vencidos ou a vencer" />
+        <Kpi tone="warn" label="Apps com só PRD"       num={(r.appsSoPRD||0).toLocaleString('pt-BR')}      delta={`${fmt1(pct(r.appsSoPRD,appTotal))}%`} sub="sem HML/DEV" />
+      </div>
+      <div className="ov-grid">
+        <div className="card">
+          <div className="card-head"><div><div className="card-title">Saúde das instalações de Produção</div><div className="card-sub">{(r.instalacoesPRD||0)} instalações · critérios: frente TIC, campos obrigatórios, consistência de ambiente, certificados</div></div></div>
+          <div className="donut-wrap">
+            <div className="donut" style={{background:`conic-gradient(var(--ok) 0% ${saudPct}%, var(--warn) ${saudPct}% ${saudPct+vazPct}%, var(--err) ${saudPct+vazPct}% ${saudPct+vazPct+incPct}%, var(--neu) ${saudPct+vazPct+incPct}% 100%)`}}>
+              <div className="donut-center"><b>{fmt1(saudPct)}%</b><small>saudáveis</small></div>
+            </div>
+            <div className="legend">
+              {[
+                {cls:'ok',  label:'Saudáveis',               val:r.saudaveis||0,       d:prdTotal},
+                {cls:'warn',label:'Campos obrigatórios vaz.', val:r.camposVazios||0,    d:prdTotal},
+                {cls:'err', label:'Inconsistência ambiente',  val:r.inconsistencia||0,  d:prdTotal},
+                {cls:'neu', label:'Sem Frente TIC',           val:r.semFrenteTIC||0,    d:prdTotal},
+              ].map((l,i) => (
+                <div key={i} className="legend-item">
+                  <div className={`legend-sq ${l.cls}`} />
+                  <span className="legend-label">{l.label}</span>
+                  <span className="legend-val">{l.val.toLocaleString('pt-BR')}</span>
+                  <span className="legend-pct">{fmt1(pct(l.val,l.d))}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="card">
+          <div className="card-head"><div><div className="card-title">Cobertura de ambientes por aplicação</div><div className="card-sub">{(r.appsTotalPRD||0)} aplicações com Produção ativa</div></div></div>
+          <div className="ministats">
+            {[
+              {label:'PRD+HML+DEV', val:r.appsPHD||0, cls:'ok',   sub:'completas'},
+              {label:'PRD+HML',     val:r.appsPH||0,  cls:'warn',  sub:'sem DEV'},
+              {label:'PRD+DEV',     val:r.appsPD||0,  cls:'',      sub:'sem HML'},
+              {label:'Só PRD',      val:r.appsSoPRD||0,cls:'err',  sub:'sem HML/DEV'},
+            ].map((m,i) => (
+              <div key={i} className="ms">
+                <div className="ms-label">{m.label}</div>
+                <div className={`ms-num ${m.cls}`}>{m.val.toLocaleString('pt-BR')}</div>
+                <div className="ms-sub">{fmt1(pct(m.val,appTotal))}% · {m.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'12px 16px 16px'}}>
+            <div className="sbar" style={{height:6}}>
+              <i className="ok"   style={{width:`${pct(r.appsPHD||0,appTotal)}%`}} />
+              <i className="warn" style={{width:`${pct(r.appsPH||0,appTotal)}%`}} />
+              <i className="info" style={{width:`${pct(r.appsPD||0,appTotal)}%`}} />
+              <i className="err"  style={{width:`${pct(r.appsSoPRD||0,appTotal)}%`}} />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-head"><div><div className="card-title">Ativos órfãos no CMDB</div><div className="card-sub">Ativos com Status Ativo sem nenhuma instalação ativa vinculada</div></div></div>
+        <div className="cols-2" style={{padding:20,gap:20}}>
+          {[
+            {label:'Servidores', total:r.srvAtivos||0, orf:r.srvOrfaos||0, vinc:r.srvVinculados||0},
+            {label:'Schemas (SGBD)', total:r.schemasAtivos||0, orf:r.schemasOrfaos||0, vinc:r.schemasVinculados||0},
+          ].map((a,i) => {
+            const op = pct(a.orf, a.total||1);
+            const vp = pct(a.vinc, a.total||1);
+            return (
+              <div key={i}>
+                <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                  <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>{a.label}</div><div style={{fontSize:11,color:'var(--t3)'}}>{a.total.toLocaleString('pt-BR')} ativos no CMDB</div></div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontFamily:'var(--mono)',fontSize:22,fontWeight:500,color:'var(--err)'}}>{a.orf.toLocaleString('pt-BR')}</div>
+                    <div style={{fontSize:11,color:'var(--t3)',fontFamily:'var(--mono)'}}>{fmt1(op)}% órfãos</div>
+                  </div>
+                </div>
+                <div className="sbar" style={{height:5}}>
+                  <i className="ok"  style={{width:`${vp}%`}} />
+                  <i className="err" style={{width:`${op}%`}} />
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',marginTop:6,fontSize:10,fontFamily:'var(--mono)',color:'var(--t3)'}}>
+                  <span>● Vinculados {a.vinc.toLocaleString('pt-BR')} ({fmt1(vp)}%)</span>
+                  <span style={{color:'var(--err)'}}>● Órfãos {a.orf.toLocaleString('pt-BR')} ({fmt1(op)}%)</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ─── TAB SAÚDE ─── */
+const SaudeTab = ({ dados }) => {
+  const r = dados?.resumo || {};
+  const saude = dados?.saude || [];
+  const prdTotal = r.instalacoesPRD || 1;
+  return (
+    <>
+      <div className="kpi-grid">
+        <Kpi tone="info" label="Total Produção"          num={(r.instalacoesPRD||0).toLocaleString('pt-BR')} sub="instalações ativas" />
+        <Kpi tone="ok"   label="Saudáveis"               num={(r.saudaveis||0).toLocaleString('pt-BR')}      delta={`${fmt1(pct(r.saudaveis,prdTotal))}%`} sub="todos os critérios ok" />
+        <Kpi tone="warn" label="Campos obrig. vazios"    num={(r.camposVazios||0).toLocaleString('pt-BR')}   delta={`${fmt1(pct(r.camposVazios,prdTotal))}%`} sub="servidor/schema/cert." />
+        <Kpi tone="err"  label="Inconsistência ambiente" num={(r.inconsistencia||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.inconsistencia,prdTotal))}%`} sub="frentes com problema" />
+        <Kpi tone="warn" label="Desatualizado >12m"      num={(r.desatualizado12m||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.desatualizado12m,prdTotal))}%`} sub="indicador separado" />
+      </div>
+      <div className="card">
+        <div className="card-head"><div><div className="card-title">Saúde por Frente TIC</div><div className="card-sub">Critérios: frente TIC, campos obrigatórios, consistência de ambiente, certificados · desatualização é indicador separado</div></div></div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Frente TIC</th>
+              <th className="r">Total</th>
+              <th style={{minWidth:140}}>Saúde</th>
+              <th className="r">Saudáveis</th>
+              <th className="r">Sem frente</th>
+              <th className="r">Campos vaz.</th>
+              <th className="r">Inconsist.</th>
+              <th className="r">Cert.</th>
+              <th className="r">Desat.&gt;12m</th>
+            </tr>
+          </thead>
+          <tbody>
+            {saude.map((f,i) => {
+              const p = f.tot ? f.ok/f.tot*100 : 0;
+              const tone = p>=90?'ok':p>=70?'warn':'err';
+              return (
+                <tr key={i}>
+                  <td>
+                    <div className="frente-cell">
+                      <div className="frente-strip" style={{background:f.orphan?'var(--err)':tone==='ok'?'var(--ok)':tone==='warn'?'var(--warn)':'var(--err)'}} />
+                      <div><div className="frente-name">{f.name}</div><div className="frente-tag">{f.semFrt>0?'sem atribuição formal':'frente formal'}</div></div>
+                    </div>
+                  </td>
+                  <td className="r">{f.tot}</td>
+                  <td>
+                    <div className="health-cell">
+                      <div className="health-row"><span className="health-label">saúde</span><span className={`health-pct ${tone}`}>{fmt1(p)}%</span></div>
+                      <div className="hbar"><i className={tone} style={{width:`${p}%`}} /></div>
+                    </div>
+                  </td>
+                  <td className={tone}>{f.ok}</td>
+                  <td className={f.semFrt>0?'err':'zero'}>{f.semFrt||'—'}</td>
+                  <td className={f.vazio>0?'warn':'zero'}>{f.vazio||'—'}</td>
+                  <td className={f.incons>0?'err':'zero'}>{f.incons||'—'}</td>
+                  <td className={f.cert>0?'warn':'zero'}>{f.cert||'—'}</td>
+                  <td className={f.desat>0?'muted':'zero'}>{f.desat||'—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="tbl-foot">
+          <span>{saude.length} frentes · {(r.instalacoesPRD||0)} instalações de Produção</span>
+          <span style={{fontFamily:'var(--mono)',fontSize:10}}>Gerado em {dados?.geradoTs||'—'}</span>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ─── TAB COBERTURA ─── */
+const CoberturaTab = ({ dados }) => {
+  const r = dados?.resumo || {};
+  const cob = dados?.cobertura || [];
+  const appTotal = r.appsTotalPRD || 1;
+  return (
+    <>
+      <div className="kpi-grid cols-4">
+        <Kpi tone="ok"   label="PRD+HML+DEV"      num={(r.appsPHD||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.appsPHD,appTotal))}%`} sub="cobertura completa" />
+        <Kpi tone="warn" label="PRD+HML, sem DEV"  num={(r.appsPH||0).toLocaleString('pt-BR')}  delta={`${fmt1(pct(r.appsPH,appTotal))}%`}  sub="falta DEV" />
+        <Kpi tone="info" label="PRD+DEV, sem HML"  num={(r.appsPD||0).toLocaleString('pt-BR')}  delta={`${fmt1(pct(r.appsPD,appTotal))}%`}  sub="falta HML" />
+        <Kpi tone="err"  label="Somente PRD"        num={(r.appsSoPRD||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.appsSoPRD,appTotal))}%`} sub="sem HML nem DEV" />
+      </div>
+      <div className="card">
+        <div className="card-head"><div><div className="card-title">Cobertura de ambientes por aplicação</div><div className="card-sub">{(r.appsTotalPRD||0)} aplicações com Produção ativa · visibilidade do inventário sem julgamento de valor</div></div></div>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Frente TIC</th>
+              <th className="r">Apps</th>
+              <th style={{minWidth:160}}>Distribuição</th>
+              <th className="r">PRD+HML+DEV</th>
+              <th className="r">PRD+HML</th>
+              <th className="r">PRD+DEV</th>
+              <th className="r">Só PRD</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cob.map((f,i) => {
+              const t = f.apps||1;
+              return (
+                <tr key={i}>
+                  <td>
+                    <div className="frente-cell">
+                      <div className="frente-strip" style={{background:'var(--fgv)'}} />
+                      <div><div className="frente-name">{f.name}</div><div className="frente-tag">{f.phd>f.p?'maioria completa':f.p>f.phd?'maioria só PRD':'distribuição mista'}</div></div>
+                    </div>
+                  </td>
+                  <td className="r">{f.apps}</td>
+                  <td>
+                    <div style={{minWidth:150}}>
+                      <div className="sbar" style={{height:4,marginBottom:4}}>
+                        <i className="ok"   style={{width:`${pct(f.phd,t)}%`}} />
+                        <i className="warn" style={{width:`${pct(f.ph,t)}%`}} />
+                        <i className="info" style={{width:`${pct(f.pd,t)}%`}} />
+                        <i className="err"  style={{width:`${pct(f.p,t)}%`}} />
+                      </div>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:10,fontFamily:'var(--mono)'}}>
+                        <span style={{color:'var(--ok)',fontWeight:500}}>{fmt1(pct(f.phd,t))}% completas</span>
+                        <span style={{color:'var(--err)'}}>{fmt1(pct(f.p,t))}% só PRD</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={f.phd>0?'ok':'zero'}>{f.phd||'—'}</td>
+                  <td className={f.ph>0?'warn':'zero'}>{f.ph||'—'}</td>
+                  <td className={f.pd>0?'muted':'zero'}>{f.pd||'—'}</td>
+                  <td className={f.p>0?'err':'zero'}>{f.p||'—'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="tbl-foot">
+          <span>{cob.length} frentes · {(r.appsTotalPRD||0)} aplicações</span>
+          <span style={{fontFamily:'var(--mono)',fontSize:10}}>Gerado em {dados?.geradoTs||'—'}</span>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ─── TAB ÓRFÃOS ─── */
+const OrfaosTab = ({ dados }) => {
+  const r = dados?.resumo || {};
+  const srvList = dados?.orfaos?.servidores || [];
+  const sch = dados?.orfaos?.schemas || {};
+  return (
+    <>
+      <div className="alert-banner">
+        <div style={{color:'var(--err)',flexShrink:0,paddingTop:1}}>⚠</div>
+        <div>
+          <div className="alert-title">Critério: ativo com Status Ativo sem nenhuma instalação ativa vinculada</div>
+          <div className="alert-body">Total: <b>{(r.srvOrfaos||0).toLocaleString('pt-BR')} servidores</b> e <b>{(r.schemasOrfaos||0).toLocaleString('pt-BR')} schemas</b> sem vínculo. Schemas não têm atributo Ambiente estruturado.</div>
+        </div>
+      </div>
+      <div className="kpi-grid cols-4">
+        <Kpi tone="info" label="Servidores no CMDB" num={(r.srvAtivos||0).toLocaleString('pt-BR')} sub="total ativos" />
+        <Kpi tone="err"  label="Servidores órfãos"  num={(r.srvOrfaos||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.srvOrfaos,r.srvAtivos||1))}%`} sub="sem instalação vinculada" />
+        <Kpi tone="info" label="Schemas no CMDB"    num={(r.schemasAtivos||0).toLocaleString('pt-BR')} sub="total ativos" />
+        <Kpi tone="err"  label="Schemas órfãos"     num={(r.schemasOrfaos||0).toLocaleString('pt-BR')} delta={`${fmt1(pct(r.schemasOrfaos,r.schemasAtivos||1))}%`} sub="sem instalação vinculada" />
+      </div>
+      <div className="cols-2">
+        <div className="card">
+          <div className="card-head"><div><div className="card-title">Servidores órfãos por ambiente</div><div className="card-sub">{(r.srvAtivos||0).toLocaleString('pt-BR')} servidores ativos · por atributo Ambiente</div></div></div>
+          <table className="tbl">
+            <thead><tr><th>Ambiente</th><th className="r">Total</th><th className="r">Vinculados</th><th className="r">Órfãos</th><th style={{minWidth:120}}>% órfãos</th></tr></thead>
+            <tbody>
+              {srvList.map((a,i) => {
+                const tone = a.pct>=70?'err':a.pct>=50?'warn':'ok';
+                return (
+                  <tr key={i}>
+                    <td>
+                      <div className="frente-cell">
+                        <div className="frente-strip" style={{background:tone==='err'?'var(--err)':tone==='warn'?'var(--warn)':'var(--ok)'}} />
+                        <div className="frente-name">{a.amb}</div>
+                      </div>
+                    </td>
+                    <td className="r">{(a.total||0).toLocaleString('pt-BR')}</td>
+                    <td className="ok">{(a.vinc||0).toLocaleString('pt-BR')}</td>
+                    <td className="err">{(a.orf||0).toLocaleString('pt-BR')}</td>
+                    <td>
+                      <div className="health-cell">
+                        <div className="health-row"><span className="health-label">órfãos</span><span className={`health-pct ${tone}`}>{fmt1(a.pct||0)}%</span></div>
+                        <div className="hbar"><i className={tone} style={{width:`${a.pct||0}%`}} /></div>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="card">
+          <div className="card-head"><div><div className="card-title">Schemas (SGBD) órfãos</div><div className="card-sub">{(r.schemasAtivos||0).toLocaleString('pt-BR')} schemas ativos · Ambiente não é atributo estruturado</div></div></div>
+          <div className="donut-wrap">
+            <div className="donut" style={{background:`conic-gradient(var(--err) 0% ${sch.pct||0}%, var(--ok) ${sch.pct||0}% 100%)`}}>
+              <div className="donut-center"><b>{fmt1(sch.pct||0)}%</b><small>órfãos</small></div>
+            </div>
+            <div className="legend">
+              <div className="legend-item"><div className="legend-sq err" /><span className="legend-label">Órfãos</span><span className="legend-val">{(sch.orf||0).toLocaleString('pt-BR')}</span><span className="legend-pct">{fmt1(sch.pct||0)}%</span></div>
+              <div className="legend-item"><div className="legend-sq ok" /><span className="legend-label">Vinculados a instalação</span><span className="legend-val">{(sch.vinc||0).toLocaleString('pt-BR')}</span><span className="legend-pct">{fmt1(pct(sch.vinc,sch.total||1))}%</span></div>
+            </div>
+          </div>
+          <div style={{padding:'12px 20px 16px',borderTop:'1px solid var(--b-subtle)',fontSize:11,color:'var(--t2)',lineHeight:1.6}}>
+            Schemas não têm atributo <code style={{fontFamily:'var(--mono)',background:'var(--sunken)',padding:'1px 4px',borderRadius:2}}>Ambiente</code> estruturado no CMDB — separação por ambiente indisponível.
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+/* ─── APP ─── */
+const App = () => {
+  const [tab, setTab]   = useState('overview');
+  const [dados, setDados] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState(null);
+
+  useEffect(() => {
+    fetch(DADOS_URL)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => { setDados(d); setLoading(false); })
+      .catch(e => { setErro(e.message); setLoading(false); });
+  }, []);
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',flexDirection:'column',gap:16,background:'var(--canvas)'}}>
+      <div style={{display:'flex',gap:6}}>
+        {[0,1,2].map(i => <div key={i} className="loading-dot" style={{width:8,height:8,borderRadius:'50%',background:'var(--fgv)',animation:'pulse 1.2s ease-in-out infinite',animationDelay:`${i*0.2}s`}} />)}
+      </div>
+      <div style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--t3)'}}>Carregando dados do CMDB…</div>
+    </div>
+  );
+
+  if (erro) return (
+    <div style={{margin:32,padding:20,background:'var(--err-bg)',border:'1px solid rgba(168,51,42,0.2)',borderRadius:4,fontSize:13,color:'var(--err)'}}>
+      Erro ao carregar dados: {erro}
+    </div>
+  );
+
+  const r = dados?.resumo || {};
+  const tabs = [
+    {id:'overview',  label:'Visão geral'},
+    {id:'saude',     label:'Saúde PRD',      badge:(r.instalacoesPRD||0).toLocaleString('pt-BR')},
+    {id:'cobertura', label:'Cobertura',       badge:(r.appsTotalPRD||0).toLocaleString('pt-BR')},
+    {id:'orfaos',    label:'Ativos Órfãos',   badge:((r.srvOrfaos||0)+(r.schemasOrfaos||0)).toLocaleString('pt-BR'), err:true},
+  ];
+
+  return (
+    <div className="shell">
+      <Sidebar tab={tab} setTab={setTab} dados={dados} />
+      <div className="main">
+        <Topbar dados={dados} />
+        <div className="breadcrumb">
+          <span>Governança</span><span className="sep">/</span>
+          <span>CMDB</span><span className="sep">/</span>
+          <span className="now">Auditoria de Inventário</span>
+          <span style={{marginLeft:'auto',fontFamily:'var(--mono)',fontSize:10}}>atualizado {dados?.geradoTs||'—'}</span>
+        </div>
+        <Hero dados={dados} />
+        <div className="toolbar">
+          {tabs.map(t => (
+            <button key={t.id} className={`tab-btn ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
+              {t.label}
+              {t.badge && <span className={`tab-badge ${t.err?'err':''}`}>{t.badge}</span>}
+            </button>
+          ))}
+        </div>
+        <div className="body">
+          {tab==='overview'  && <Overview  dados={dados} />}
+          {tab==='saude'     && <SaudeTab  dados={dados} />}
+          {tab==='cobertura' && <CoberturaTab dados={dados} />}
+          {tab==='orfaos'    && <OrfaosTab dados={dados} />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

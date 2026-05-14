@@ -1,0 +1,436 @@
+{
+    "geradoEm": "14/05/2026",
+    "geradoTs": "14/05/2026 15:45",
+    "resumo": {
+        "instalacoesAtivas": 1511,
+        "instalacoesPRD": 775,
+        "saudaveis": 564,
+        "camposVazios": 51,
+        "inconsistencia": 85,
+        "semFrenteTIC": 5,
+        "desatualizado12m": 48,
+        "certProblema": 115,
+        "appsTotalPRD": 702,
+        "appsSoPRD": 430,
+        "appsPHD": 209,
+        "appsPH": 57,
+        "appsPD": 6,
+        "srvAtivos": 1187,
+        "srvOrfaos": 773,
+        "srvVinculados": 414,
+        "schemasAtivos": 3930,
+        "schemasOrfaos": 3398,
+        "schemasVinculados": 532
+    },
+    "saude": [
+        {
+            "name": "WEB - Sites e Portais",
+            "tot": 203,
+            "ok": 179,
+            "semFrt": 0,
+            "vazio": 2,
+            "incons": 8,
+            "cert": 15,
+            "desat": 2
+        },
+        {
+            "name": "IBRE",
+            "tot": 138,
+            "ok": 86,
+            "semFrt": 0,
+            "vazio": 7,
+            "incons": 45,
+            "cert": 1,
+            "desat": 8
+        },
+        {
+            "name": "Sistemas Acad\u00eamicos",
+            "tot": 105,
+            "ok": 94,
+            "semFrt": 0,
+            "vazio": 7,
+            "incons": 3,
+            "cert": 8,
+            "desat": 6
+        },
+        {
+            "name": "Solu\u00e7\u00f5es Corporativas",
+            "tot": 94,
+            "ok": 49,
+            "semFrt": 0,
+            "vazio": 10,
+            "incons": 2,
+            "cert": 44,
+            "desat": 5
+        },
+        {
+            "name": "Sistemas Financeiros e Corporativos",
+            "tot": 35,
+            "ok": 33,
+            "semFrt": 0,
+            "vazio": 1,
+            "incons": 0,
+            "cert": 2,
+            "desat": 4
+        },
+        {
+            "name": "IDE - SAN/TI",
+            "tot": 32,
+            "ok": 28,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 4,
+            "cert": 0,
+            "desat": 1
+        },
+        {
+            "name": "Sistemas de BI",
+            "tot": 31,
+            "ok": 14,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 17,
+            "cert": 0,
+            "desat": 6
+        },
+        {
+            "name": "Sistemas Controladoria/RH",
+            "tot": 27,
+            "ok": 10,
+            "semFrt": 0,
+            "vazio": 12,
+            "incons": 2,
+            "cert": 15,
+            "desat": 0
+        },
+        {
+            "name": "IDE - Sistemas Acad\u00eamicos",
+            "tot": 21,
+            "ok": 17,
+            "semFrt": 0,
+            "vazio": 4,
+            "incons": 0,
+            "cert": 4,
+            "desat": 1
+        },
+        {
+            "name": "Arquitetura de Sistemas e Solu\u00e7\u00f5es",
+            "tot": 21,
+            "ok": 18,
+            "semFrt": 0,
+            "vazio": 1,
+            "incons": 0,
+            "cert": 3,
+            "desat": 2
+        },
+        {
+            "name": "Infraestrutura",
+            "tot": 19,
+            "ok": 15,
+            "semFrt": 0,
+            "vazio": 3,
+            "incons": 1,
+            "cert": 2,
+            "desat": 4
+        },
+        {
+            "name": "DCI",
+            "tot": 14,
+            "ok": 0,
+            "semFrt": 0,
+            "vazio": 2,
+            "incons": 1,
+            "cert": 13,
+            "desat": 0
+        },
+        {
+            "name": "Escrit\u00f3rio de Seguran\u00e7a da Informa\u00e7\u00e3o",
+            "tot": 12,
+            "ok": 9,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 3,
+            "desat": 2
+        },
+        {
+            "name": "FGV Projetos",
+            "tot": 9,
+            "ok": 6,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 2,
+            "cert": 1,
+            "desat": 2
+        },
+        {
+            "name": "Sem frente",
+            "tot": 5,
+            "ok": 0,
+            "semFrt": 5,
+            "vazio": 1,
+            "incons": 0,
+            "cert": 1,
+            "desat": 1
+        },
+        {
+            "name": "ECMI",
+            "tot": 3,
+            "ok": 3,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 0,
+            "desat": 3
+        },
+        {
+            "name": "Governan\u00e7a de Infraestrutura para Pesquisas",
+            "tot": 2,
+            "ok": 2,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 0,
+            "desat": 0
+        },
+        {
+            "name": "CTE - Coordena\u00e7\u00e3o de Tecnologias Educacionais",
+            "tot": 1,
+            "ok": 0,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 1,
+            "desat": 0
+        },
+        {
+            "name": "EBAPE - N\u00facleo de Computa\u00e7\u00e3o",
+            "tot": 1,
+            "ok": 0,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 1,
+            "desat": 0
+        },
+        {
+            "name": "NCEPGE",
+            "tot": 1,
+            "ok": 0,
+            "semFrt": 0,
+            "vazio": 1,
+            "incons": 0,
+            "cert": 1,
+            "desat": 1
+        },
+        {
+            "name": "Governan\u00e7a e Projetos de Infraestrutura",
+            "tot": 1,
+            "ok": 1,
+            "semFrt": 0,
+            "vazio": 0,
+            "incons": 0,
+            "cert": 0,
+            "desat": 0
+        }
+    ],
+    "cobertura": [
+        {
+            "name": "WEB - Sites e Portais",
+            "apps": 188,
+            "phd": 2,
+            "ph": 0,
+            "pd": 1,
+            "p": 185
+        },
+        {
+            "name": "IBRE",
+            "apps": 130,
+            "phd": 37,
+            "ph": 2,
+            "pd": 1,
+            "p": 90
+        },
+        {
+            "name": "Sistemas Acad\u00eamicos",
+            "apps": 93,
+            "phd": 37,
+            "ph": 14,
+            "pd": 0,
+            "p": 42
+        },
+        {
+            "name": "Solu\u00e7\u00f5es Corporativas",
+            "apps": 83,
+            "phd": 42,
+            "ph": 19,
+            "pd": 1,
+            "p": 21
+        },
+        {
+            "name": "Sistemas Financeiros e Corporativos",
+            "apps": 32,
+            "phd": 19,
+            "ph": 7,
+            "pd": 0,
+            "p": 6
+        },
+        {
+            "name": "IDE - SAN/TI",
+            "apps": 29,
+            "phd": 25,
+            "ph": 2,
+            "pd": 0,
+            "p": 2
+        },
+        {
+            "name": "Sistemas de BI",
+            "apps": 26,
+            "phd": 0,
+            "ph": 0,
+            "pd": 0,
+            "p": 26
+        },
+        {
+            "name": "Sistemas Controladoria/RH",
+            "apps": 26,
+            "phd": 2,
+            "ph": 0,
+            "pd": 0,
+            "p": 24
+        },
+        {
+            "name": "Arquitetura de Sistemas e Solu\u00e7\u00f5es",
+            "apps": 20,
+            "phd": 15,
+            "ph": 4,
+            "pd": 1,
+            "p": 0
+        },
+        {
+            "name": "IDE - Sistemas Acad\u00eamicos",
+            "apps": 19,
+            "phd": 10,
+            "ph": 4,
+            "pd": 1,
+            "p": 4
+        },
+        {
+            "name": "Infraestrutura",
+            "apps": 16,
+            "phd": 3,
+            "ph": 2,
+            "pd": 0,
+            "p": 11
+        },
+        {
+            "name": "DCI",
+            "apps": 13,
+            "phd": 13,
+            "ph": 0,
+            "pd": 0,
+            "p": 0
+        },
+        {
+            "name": "Escrit\u00f3rio de Seguran\u00e7a da Informa\u00e7\u00e3o",
+            "apps": 12,
+            "phd": 0,
+            "ph": 1,
+            "pd": 1,
+            "p": 10
+        },
+        {
+            "name": "Sem frente",
+            "apps": 5,
+            "phd": 0,
+            "ph": 0,
+            "pd": 0,
+            "p": 5
+        },
+        {
+            "name": "FGV Projetos",
+            "apps": 3,
+            "phd": 2,
+            "ph": 0,
+            "pd": 0,
+            "p": 1
+        },
+        {
+            "name": "ECMI",
+            "apps": 3,
+            "phd": 1,
+            "ph": 0,
+            "pd": 0,
+            "p": 2
+        },
+        {
+            "name": "Governan\u00e7a de Infraestrutura para Pesquisas",
+            "apps": 2,
+            "phd": 0,
+            "ph": 1,
+            "pd": 0,
+            "p": 1
+        },
+        {
+            "name": "CTE - Coordena\u00e7\u00e3o de Tecnologias Educacionais",
+            "apps": 1,
+            "phd": 0,
+            "ph": 1,
+            "pd": 0,
+            "p": 0
+        },
+        {
+            "name": "EBAPE - N\u00facleo de Computa\u00e7\u00e3o",
+            "apps": 1,
+            "phd": 1,
+            "ph": 0,
+            "pd": 0,
+            "p": 0
+        }
+    ],
+    "orfaos": {
+        "servidores": [
+            {
+                "amb": "Produ\u00e7\u00e3o",
+                "total": 743,
+                "vinc": 261,
+                "orf": 482,
+                "pct": 64.9
+            },
+            {
+                "amb": "Homologa\u00e7\u00e3o",
+                "total": 223,
+                "vinc": 99,
+                "orf": 124,
+                "pct": 55.6
+            },
+            {
+                "amb": "Desenvolvimento",
+                "total": 146,
+                "vinc": 51,
+                "orf": 95,
+                "pct": 65.1
+            },
+            {
+                "amb": "Pr\u00e9-Produ\u00e7\u00e3o",
+                "total": 2,
+                "vinc": 0,
+                "orf": 2,
+                "pct": 100.0
+            },
+            {
+                "amb": "Outros",
+                "total": 73,
+                "vinc": 3,
+                "orf": 70,
+                "pct": 95.9
+            }
+        ],
+        "schemas": {
+            "total": 3930,
+            "vinc": 532,
+            "orf": 3398,
+            "pct": 86.5
+        }
+    }
+}
