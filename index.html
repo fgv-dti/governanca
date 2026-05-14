@@ -169,7 +169,7 @@ body { font-family: var(--sans); background: var(--canvas); color: var(--t1); li
 const { useState, useEffect } = React;
 
 // URL do JSON no GitHub da FGV
-const DADOS_URL = "https://github.fgv.br/arquit/geradorcomunicadodti/raw/main/cmdb/dados.json";
+const DADOS_URL = "https://raw.githubusercontent.com/fgv-dti/governanca/main/dados.json";
 
 const fmt1 = n => (n || 0).toFixed(1);
 const pct  = (n, d) => d ? (n * 100 / d) : 0;
